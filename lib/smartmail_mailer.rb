@@ -107,6 +107,7 @@ class SMailer
   end
 
   def set_attach(single_file_path)
+    puts "set_attach: #{single_file_path}"
     return unless single_file_path.is_a? String
     attach = TMail::Mail.new
     file_path = Kconv.toutf8(single_file_path)
@@ -115,7 +116,7 @@ class SMailer
     file_path, file_name = $1, $2
     tmp_file_path = File.expand_path(file_name,file_path)
     attach.body = Base64.encode64(File.read(tmp_file_path))
-    puts "set attachment: #{file_path}"
+    puts "set_attach: #{file_path}"
     file_name = Kconv.tojis(file_name).split(//,1).pack('m').chomp
     file_name = "=?ISO-2022-JP?B?"+file_name.gsub('\n', '')+"?="
     attach.set_content_type 'application','octet-stream','name' => file_name
@@ -126,7 +127,7 @@ class SMailer
   end
 
   def send_to( mail_to, subject, message, attachment=nil )
-    # p "send email: #{mail_to} #{subject} #{message} #{attachment}"
+    p "send email: #{mail_to} #{subject} #{message} #{attachment}"
     set_to( mail_to )
     set_subject( subject ) if subject
     set_body( message ) if message
@@ -150,7 +151,7 @@ class SMailer
     details[:subject], details[:body] = subject, body
     # details[:from], details[:attachment] = email.from, attachments
     details[:to], details[:from], details[:attachment] = email['Delivered-To'].to_s, email.from, attachments
-    # details.each_pair { |k,v| print "analysis email: #{k} => #{v}\n" }
+    details.each_pair { |k,v| print "analysis email: #{k} => #{v}\n" }
     details
   end
 

@@ -1,0 +1,13 @@
+<p>
+  <b>Name:</b>
+  <%=h @mail_item.name %>
+</p>
+
+<p>
+  <b>Item:</b>
+  <%=h @mail_item.item %>
+</p>
+
+
+<%= link_to 'Edit', edit_mail_item_path(@mail_item) %> |
+<%= link_to 'Back', mail_items_path %>

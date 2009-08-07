@@ -1,0 +1,22 @@
+<h1>Listing mail_items</h1>
+
+<table>
+  <tr>
+    <th>Name</th>
+    <th>Item</th>
+  </tr>
+
+<% @mail_items.each do |mail_item| %>
+  <tr>
+    <td><%=h mail_item.name %></td>
+    <td><%=h mail_item.item %></td>
+    <td><%= link_to 'Show', mail_item %></td>
+    <td><%= link_to 'Edit', edit_mail_item_path(mail_item) %></td>
+    <td><%= link_to 'Destroy', mail_item, :confirm => 'Are you sure?', :method => :delete %></td>
+  </tr>
+<% end %>
+</table>
+
+<br />
+
+<%= link_to 'New mail_item', new_mail_item_path %>

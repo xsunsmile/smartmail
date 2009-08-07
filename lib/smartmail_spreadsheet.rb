@@ -14,7 +14,7 @@ class SMSpreadsheet
     fields = get_fields_from_spreadsheet( sheet_name )
     result = fields.collect { |info| info[:contents] if info[:title] == field_name }
     result.compact! if result
-    puts "get_columns_from_spreadsheet: #{sheet_name}, #{field_name}, #{result}"
+    # puts "get_columns_from_spreadsheet: #{sheet_name}, #{field_name}, #{result}"
     return result
   end
 

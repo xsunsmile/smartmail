@@ -1,0 +1,11 @@
+SMAgent.email_workitem
+  SMComposer.compose
+    translate_to_email_contents
+      get_step_information
+        SMOperation.operate
+          sm_ref:
+          sm_list:
+    SMFormater.format
+
+
+applied_workitems: lib/openwfe/engine/status_methods.rb +105

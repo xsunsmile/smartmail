@@ -1,0 +1,10 @@
+# Logfile created on Sun Aug 02 11:41:12 +0900 2009 by logger.rb/1.5.2.9
+I, [2009-08-02T11:41:12.912091 #12261]  INFO -- : OpenWFE::Engine 's_engine' - build_scheduler() version is 1.0.13
+I, [2009-08-02T11:41:13.129997 #12261]  INFO -- : OpenWFE::Engine 's_engine' - new() --- engine started --- 23928501296500
+I, [2009-08-02T11:41:13.135775 #12261]  INFO -- : OpenWFE::ExpressionPool 's_expression_pool' - wait_for() '20090802-bubibedasu' is over
+I, [2009-08-02T11:42:38.683024 #12283]  INFO -- : OpenWFE::Engine 's_engine' - build_scheduler() version is 1.0.13
+I, [2009-08-02T11:42:38.902088 #12283]  INFO -- : OpenWFE::Engine 's_engine' - new() --- engine started --- 23511054475020
+I, [2009-08-02T11:42:38.907857 #12283]  INFO -- : OpenWFE::ExpressionPool 's_expression_pool' - wait_for() '20090802-bubunedowa' is over
+I, [2009-08-02T12:49:31.084850 #12882]  INFO -- : OpenWFE::Engine 's_engine' - build_scheduler() version is 1.0.13
+I, [2009-08-02T12:49:31.306025 #12882]  INFO -- : OpenWFE::Engine 's_engine' - new() --- engine started --- 23997174978860
+I, [2009-08-02T12:49:31.311869 #12882]  INFO -- : OpenWFE::ExpressionPool 's_expression_pool' - wait_for() '20090802-dasemurumu' is over
