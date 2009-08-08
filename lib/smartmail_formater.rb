@@ -56,7 +56,7 @@ class SMFormater
 
   def self.format_title( email_contents, format )
     title = email_contents['MAIL_TITLE']
-    puts "format_title: #{title.inspect}"
+    # puts "format_title: #{title.inspect}"
     return title if title.is_a? String
     pre = title['pre_contents']
     rep = title['replace_contents'].first

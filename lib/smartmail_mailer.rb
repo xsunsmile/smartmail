@@ -107,8 +107,9 @@ class SMailer
   end
 
   def set_attach(single_file_path)
-    puts "set_attach: #{single_file_path}"
-    return unless single_file_path.is_a? String
+    puts "set_attach: #{single_file_path.inspect}"
+    single_file_path = single_file_path.first if single_file_path.is_a? Array
+    return unless single_file_path
     attach = TMail::Mail.new
     file_path = Kconv.toutf8(single_file_path)
     file_path = "./"+file_path if !(/\// =~ file_path)
@@ -151,7 +152,7 @@ class SMailer
     details[:subject], details[:body] = subject, body
     # details[:from], details[:attachment] = email.from, attachments
     details[:to], details[:from], details[:attachment] = email['Delivered-To'].to_s, email.from, attachments
-    details.each_pair { |k,v| print "analysis email: #{k} => #{v}\n" }
+    details.each_pair{|k,v| puts "analysis email: #{k} => #{v}"}
     details
   end
 

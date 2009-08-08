@@ -10,45 +10,6 @@ smartmail:
   spreadsheet_key: tdcdRtE2AuxGBR7OVzWDChw
   store_name: smartmail
   deal_with_tag: 受け付け
-
-action_type:
-  all:
-    _1_question: 
-      short_form: 'q'
-      description: '質問をする'
-      mail_title: '質問に答えてください'
-      mail_contents: '質問内容を書いてください\n'
-    _2_answer: 
-      short_form: 'an'
-      description: '回答する'
-      mail_title: '回答です'
-      mail_contents: '回答内容を書いてください\n'
-    _3_report: 
-      short_form: 'rp'
-      description: '報告する'
-      mail_title: '報告いたします'
-      mail_contents: '報告内容を書いてください\n'
-
-#    _1_agree: 
-#      short_form: 'ok'
-#      description: '提案に賛成'
-#    _2_object: 
-#      short_form: 'no'
-#      description: '提案に反対'
-#    _4_object:
-#      short_form: 'fq' #TODO: if next step is final?
-#      description: '一つステップ進む'
-  owner:
-    _4_restart:
-      short_form: 'rd'
-      description: 'プロセスを再実行'
-      mail_title: 'ワークフローを再実行します'
-      mail_contents: '理由を書いてください\n'
-    _5_cancel: 
-      short_form: 'cnl'
-      description: 'プロセスをキャンセル'
-      mail_title: 'ワークフローをキャンセルします'
-      mail_contents: '理由があれば書いてください\n'
-#    _5_back: 
-#      short_form: 'bk'
-#      description: '一つステップ戻る'
+  reminder:
+    header: "【reminder】"
+    contents: "下記の内容のreminderです。\n"

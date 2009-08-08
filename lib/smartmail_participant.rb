@@ -43,6 +43,9 @@ module OpenWFE
         @user_name, @send_to = options[:name], options[:email]
         color_puts("added new participant #{@user_name}, #{@send_to}")
         @settings = SMSetting.load
+        @reminder_header, @reminder_contents = 
+          Kconv.toutf8(@settings["smartmail"]["reminder"]["header"]), 
+          Kconv.toutf8(@settings["smartmail"]["reminder"]["contents"])
       end
 
       def consume( workitem )
@@ -93,22 +96,32 @@ module OpenWFE
         scheduler = Rufus::Scheduler.start_new
         def scheduler.handle_exception (job, exception)
           puts "job #{job.job_id} caught exception '#{exception}'"
-          puts exception.backtrace
+          # puts exception.backtrace
         end
         s_reminder = workitem.fields['__sm_reminder__']
         s_timeout = workitem.fields['__sm_timeout__']
-        puts "reminder at #{s_reminder}, #{s_timeout}"
-        if s_reminder && s_timeout
+        # block no reply steps to send reminder emails
+        wait_reply = workitem.params['wait_for_reply']
+        puts "reminder at #{s_reminder}, #{s_timeout}, wait_reply:#{wait_reply}"
+        if s_reminder && s_timeout && wait_reply
+          workitem.fields['__sm_reminder__'] = nil
+          workitem.fields['__sm_timeout__'] = nil
           fei_id = fei_store.id.to_s
+          first_time = true
           scheduler.every s_reminder, :timeout => s_timeout, :first_at => Time.now do |job|
             begin
               is_next_step = MailItem.get_workitem( fei_id ) == nil
               if is_next_step
                 job.unschedule 
-                return
+                raise "#{@user_name} escape from reminder loop."
+              end
+              unless first_time
+                mailer.set_subject("#{@reminder_header}" + contents[:title])
+                mailer.set_body(contents[:body], format)
               end
               puts "#{@user_name} reminder: #{s_reminder}, #{s_timeout}, id:#{fei_id}?[#{is_next_step}]"
               mailer.send
+              first_time = false
             rescue Rufus::Scheduler::TimeOutError => toe
             end
           end

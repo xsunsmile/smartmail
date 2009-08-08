@@ -5,6 +5,7 @@ RAILS_GEM_VERSION = '2.3.2' unless defined? RAILS_GEM_VERSION
 
 # Bootstrap the Rails environment, frameworks, and default configuration
 require File.join(File.dirname(__FILE__), 'boot')
+require "smtp_tls"
 
 Rails::Initializer.run do |config|
   # Settings in config/environments/* take precedence over those specified here.
@@ -39,7 +40,8 @@ Rails::Initializer.run do |config|
 
   # Set Time.zone default to the specified zone and make Active Record auto-convert to this zone.
   # Run "rake -D time" for a list of tasks for finding time zone names.
-  config.time_zone = 'UTC'
+  config.time_zone = 'Tokyo'
+  config.log_level = :error
 
   # The default locale is :en and all translations from config/locales/*.rb,yml are auto loaded.
   # config.i18n.load_path += Dir[Rails.root.join('my', 'locales', '*.{rb,yml}')]
@@ -50,14 +52,31 @@ Rails::Initializer.run do |config|
     # (well via the ruote_plugin)
 
   $:.unshift('~/ruote/lib')
-    # using the local 'ruote', comment that out if you're using ruote as a gem
+  # using the local 'ruote', comment that out if you're using ruote as a gem
+  #
+  config.action_mailer.smtp_settings = {
+      :address => "smtp.gmail.com",
+      :port => 587,
+      :domain => "milog.jp",
+      :authentication => :login,
+      :user_name => "smart.mailflow@gmail.com",
+      :password => "gks-smartmail"
+  }
+  # config.action_mailer.sendmail_settings = {
+  #    :location => "localhost",
+  #    :arguments => "-i -t"
+  # }
+  # config.action_mailer.delivery_method = :sendmail
+  config.action_mailer.delivery_method = :smtp
+  config.action_mailer.perform_deliveries = true
+  config.action_mailer.raise_delivery_errors = true
+  config.action_mailer.default_charset = "iso-2022-jp"
 
 end
 
 class Logger
-  def format_message(severity, timestamp, progname, msg)
-    #"#{timestamp} (#{$$}) #{msg}\n"
-    "#{timestamp.strftime('%Y/%m/%d %H:%M:%S')}.#{timestamp.usec.to_s[0, 3]} (#{$$}) #{msg}\n"
-  end
+    def format_message(severity, timestamp, progname, msg)
+        #"#{timestamp} (#{$$}) #{msg}\n"
+        "#{timestamp.strftime('%Y/%m/%d %H:%M:%S')}.#{timestamp.usec.to_s[0, 3]} (#{$$}) #{msg}\n"
+    end
 end
-
