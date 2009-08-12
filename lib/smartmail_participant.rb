@@ -23,6 +23,7 @@
 #++
 
 require 'yaml'
+require 'kconv'
 require 'rufus/scheduler'
 require 'openwfe/util/xml'
 require 'openwfe/util/json'
@@ -40,7 +41,7 @@ module OpenWFE
         @current_workitem = nil
         @underline = [0x1B].pack("c*") + "[1;4;35m"
         @normal = [0x1B].pack("c*") + "[0m\n"
-        @user_name, @send_to = options[:name], options[:email]
+        @user_name, @send_to = Kconv.toutf8(options[:name]), options[:email]
         color_puts("added new participant #{@user_name}, #{@send_to}")
         @settings = SMSetting.load
         @reminder_header, @reminder_contents = 

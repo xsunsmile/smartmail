@@ -296,12 +296,12 @@ bottom;
            <br>
            REMINDER<br>
            <br>
-           <table bgcolor='#ccffcc' width='100%'>
+           <div bgcolor='#ccffcc' width='100%'>
            =============<br>
     #{@@selection_menu_name}<br>
            =============<br>
            SELECTION_MENU<br>
-           </table>
+           </div>
          </body>
      </html>
     """
@@ -309,7 +309,7 @@ bottom;
   end
 
   def self.html_options
-    "<tr><td><a href=\"mailto:MAIL?subject=TITLE&amp;body=CONTENTS\">SELECTION</a></tr></td><br>"
+    "<div><a href=\"mailto:MAIL?subject=TITLE&amp;body=CONTENTS\">SELECTION</a></div>\n"
   end
 
   def self.plain_format()
@@ -373,7 +373,7 @@ MAIL
     end
     original = original.gsub('[NEW_LINE]',"\n")
     result = original
-    print "#{@@underline}send email::#{@@normal}", result, "\n" if format == 'html'
+    # print "#{@@underline}send email::#{@@normal}", result, "\n" if format == 'html'
     result
   end
 

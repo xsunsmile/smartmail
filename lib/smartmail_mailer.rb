@@ -90,14 +90,19 @@ class SMailer
     pp @mail
   end
 
-  def send()
+  def send(times=3)
     @mail.date = Time.now
     @mail.write_back
     p "do send email to:#{@to_address}"
     return unless @to_address
     @smtp_server.enable_tls(OpenSSL::SSL::VERIFY_NONE)
-    @smtp_server.start( @helo_domain, @account, @password, @authtype ) do |smtp|
-      smtp.sendmail(@mail.encoded, @mail.from, *@to_address)
+    begin
+      @smtp_server.start(@helo_domain, @account, @password, @authtype) do |smtp|
+        smtp.sendmail(@mail.encoded, @mail.from, *@to_address)
+      end
+    rescue Exception => e
+      times -= 1
+      send(times) if times >= 0
     end
     # p "sent email: #{@to_address}"
   end

@@ -92,6 +92,7 @@ module OpenWFE
       # Complicated guesswork that needs to happen here to detect the format
       def decode_workitem( email )
         ldebug { "decoding workitem from: #{email}" }
+        analysis_error_response( email )
         arwi_id = get_arwi_id_for_decode( email )
         puts "listener got arwi:#{arwi_id}"
         return unless arwi_id && arwi_id.to_s.size > 0
@@ -99,9 +100,26 @@ module OpenWFE
         return unless workitem
         puts "listener got wi:#{workitem.class}, #{workitem}"
         workitem.attributes["attachment"] = email[:attachment]
-        SMOperation.build( email, workitem )
+        begin
+          SMOperation.build( email, workitem )
+        rescue Exception => e
+          puts "decode_workitem error: #{e.message}"
+        end
         print "#{@blue_underline}3.listener processed workitem:#{@normal} #{workitem}\n"
         workitem
+      end
+
+      def analysis_error_response( email )
+        message = email[:body]
+        return unless message && message.size > 0
+        message = message.gsub(/\n|\r|\r\n/,"__NEWLINE__")
+        error_message_pattern = "Delivery to the following recipient failed permanently:"
+        return unless /"#{error_message_pattern}"/ =~ error_message_pattern
+        send_to_pattern = "Reply-To:(.*)\n"
+        send_to = $1 if /"#{send_to_pattern}"/ =~ message
+        item_id = $1 if /\+(\d+)@/ =~ message
+        puts "analysis_error_response: #{send_to}"
+        puts "analysis_error_response: #{item_id}"
       end
 
       def rescue_arwi_id_from_mailto( mail_to )

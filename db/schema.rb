@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20090119093821) do
+ActiveRecord::Schema.define(:version => 20090612172846) do
 
   create_table "ar_workitems", :force => true do |t|
     t.string   "fei"
@@ -62,8 +62,8 @@ ActiveRecord::Schema.define(:version => 20090119093821) do
 
   create_table "history", :force => true do |t|
     t.datetime "created_at"
-    t.string   "source",      :null => false
-    t.string   "event",       :null => false
+    t.string   "source",      :default => "", :null => false
+    t.string   "event",       :default => "", :null => false
     t.string   "wfid"
     t.string   "wfname"
     t.string   "wfrevision"
@@ -80,11 +80,18 @@ ActiveRecord::Schema.define(:version => 20090119093821) do
   add_index "history", ["wfname"], :name => "index_history_on_wfname"
   add_index "history", ["wfrevision"], :name => "index_history_on_wfrevision"
 
+  create_table "mail_items", :force => true do |t|
+    t.string   "name"
+    t.string   "item"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
   create_table "process_errors", :force => true do |t|
     t.datetime "created_at"
-    t.string   "wfid",       :null => false
-    t.string   "expid",      :null => false
-    t.text     "svalue",     :null => false
+    t.string   "wfid",       :default => "", :null => false
+    t.string   "expid",      :default => "", :null => false
+    t.text     "svalue",                     :null => false
   end
 
   add_index "process_errors", ["created_at"], :name => "index_process_errors_on_created_at"

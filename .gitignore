@@ -5,4 +5,5 @@ doc/app
 doc/plugins
 work_*
 work
+Session*
 .*.swp

@@ -1,1 +1,1 @@
-ruby script/server -p 3300 | tee log/mylog.log
+ruby script/server -p 80 | tee log/mylog.log

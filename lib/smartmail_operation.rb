@@ -28,7 +28,7 @@ class SMOperation
     step_information.each {|it| information[it[:title]] = it[:contents]}
     get_operations( step_information ).each do |oper|
       field, operation, operands = oper[:field], oper[:operation], oper[:operands]
-      # puts "#{underline}f:#{field} oper:#{operation} opera:#{operands}#{@@normal}"
+      puts "#{underline}f:#{field} oper:#{operation} opera:#{operands}#{@@normal}"
       next unless field && operation && operands
       result = get_operation_results( operation, operands, workitem )
       replace = "\{#{operation}:#{operands}\}"
@@ -105,13 +105,14 @@ class SMOperation
   end
 
   def self.replay_quotation_starts( message )
-    puts "replay_quotation_starts: #{message}" unless message.is_a? String
     _message = message.to_s.chomp
     docomo_reply_pattern = /^>$/
       marker_pattern = />(:*)(\d+-\w+)(:*)|>(#+)\s(.*)\s(#+)/
       cell_phone_pattern = /^On [\d\/]*, at/
       gmail_pattern = /<(.*)@(.*)>:/
+      gmail_pattern2 = /--[0-9a-z]+--/
       /#{gmail_pattern}/ =~ _message or
+      /#{gmail_pattern2}/ =~ _message or
       /#{marker_pattern}/ =~ _message or 
       /#{cell_phone_pattern}/ =~ _message or
       /#{docomo_reply_pattern}/ =~ _message
@@ -301,13 +302,14 @@ class SMOperation
     return unless data && data.to_s.size > 0
     operands.split(/,/).each do |cond|
       condition, true_field, false_field = $1, $2, $3 if /(\w*)_(\w*)_(\w*)/ =~ cond
-      #TODO: to just to cancel, not also report if 'cp'
       set_field = ( condition == user_chose_step )? true_field : false_field
+      unset_field = ( set_field == true_field )? false_field : true_field
       set_value = ( data.size > 0 )? data : true
-      message = "sm_set_if user_step:#{user_chose_step} == con:#{condition}, " + 
-          " f:#{set_field}, v:#{set_value}#{@@normal}"
+      message = "#{@@underline}sm_set_if user_step:#{user_chose_step} == con:#{condition}, set:#{set_field}, v:#{set_value}, unset:#{unset_field} #{@@normal}"
           workitem.fields[ set_field ] = set_value
-          # puts "#{underline}#{worker}#{message}#{@@normal}"
+          #TODO: to just to cancel, not also report if 'cp'
+          workitem.fields[ unset_field ] = nil
+          puts "#{underline}#{worker}#{message}#{@@normal}"
           workitem.fields['__sm_build__'] = ''
           workitem.fields['__sm_option__'] = ''
     end
@@ -320,10 +322,10 @@ class SMOperation
     data = workitem.fields['__sm_build__']
     return unless data
     pattern = /\{.*_start\}(.*)\{.*_end\}/
-      data.gsub!(/\r\n|\r|\n|<br>/,'[NEWLINE]').gsub!(/>/,'')
+    data.gsub!(/\r\n|\r|\n|<br>/,'[NEWLINE]').gsub!(/>/,'')
     # puts "#{underline}sm_select#{@@normal} from data: #{data}"
     selection = data.scan( pattern ).join('').split(/\[NEWLINE\]/).collect {|pp| pp if !(/#/ =~ pp) }.compact!
-      selection.each {|it| it.gsub!(/\[NEWLINE\]/,"\n")}
+    selection.each {|it| it.gsub!(/\[NEWLINE\]/,"\n")}
     return unless selection
     selected_items = selection.collect {|item| item.gsub!(/\s/,''); item + "," if item.size > 0 }.compact
     # puts selected_items
@@ -338,10 +340,10 @@ class SMOperation
     data = workitem.fields['__sm_build__']
     return unless data.to_s.size > 0
     pattern = /\{.*_start\}(.*)\{.*_end\}/
-      data.gsub!(/\r\n|\r|\n|<br>/,'[NEWLINE]').gsub!(/>/,'')
+    data.gsub!(/\r\n|\r|\n|<br>/,'[NEWLINE]').gsub!(/>/,'')
     # puts "#{underline}sm_select_if#{@@normal} from data: #{data}"
     selection = data.scan( pattern ).join('').split(/\[NEWLINE\]/).collect {|pp| pp if !(/#/ =~ pp) }.compact!
-      selected_items = 
+    selected_items = 
       selection.collect {|item| item.gsub!(/\s|&nbsp;|　/,''); item + "," if item.size > 0 }.compact if selection
     data.gsub!(/\[NEWLINE\]/,"\n")
     field_value = (selected_items)? selected_items : true

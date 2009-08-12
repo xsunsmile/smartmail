@@ -13,6 +13,7 @@ set fileencodings=utf-8,latin1
 set formatoptions=tcql
 set helplang=ja
 set hlsearch
+set nomodeline
 set ruler
 set shiftwidth=2
 set tabstop=2
@@ -20,12 +21,12 @@ set textwidth=78
 let s:so_save = &so | let s:siso_save = &siso | set so=0 siso=0
 let v:this_session=expand("<sfile>:p")
 silent only
-cd ~/ruote-web2
+cd /var/www/smartmail
 if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
   let s:wipebuf = bufnr('%')
 endif
 set shortmess=aoO
-badd +30 lib/smartmail_spreadsheet.rb
+badd +60 lib/smartmail_spreadsheet.rb
 badd +36 config/initializers/participants.rb
 badd +10 public/defs/job_request.rb
 badd +11 config/config.yml
@@ -41,11 +42,10 @@ badd +36 db/migrate/20080918012151_create_workitems.rb
 badd +15 config/initializers/listeners.rb
 badd +15 test.rb
 badd +11 memo.txt
-badd +1 vendor/plugins/ruote_plugin/lib_ruote/openwfe/extras/participants/ar_participants.rb
 badd +1 app/models/mail_item.rb
 badd +1 db/migrate/20090612172846_create_mail_items.rb
 args lib/smartmail_spreadsheet.rb
-edit vendor/plugins/ruote_plugin/lib_ruote/openwfe/extras/participants/ar_participants.rb
+edit lib/smartmail_spreadsheet.rb
 set splitbelow splitright
 set nosplitbelow
 set nosplitright
@@ -102,20 +102,20 @@ setlocal indentkeys=0{,0},0),0],!^F,o,O,e,=end,=elsif,=when,=ensure,=rescue,==be
 setlocal noinfercase
 setlocal iskeyword=@,48-57,_,192-255
 setlocal keymap=
-setlocal keywordprg=ri
+setlocal keywordprg=
 setlocal nolinebreak
 setlocal nolisp
 setlocal nolist
 setlocal makeprg=
 setlocal matchpairs=(:),{:},[:]
-setlocal modeline
+setlocal nomodeline
 setlocal modifiable
 setlocal nrformats=octal,hex
 set number
 setlocal number
 setlocal numberwidth=4
-setlocal omnifunc=
-setlocal path=.,/usr/lib/ruby/site_ruby/1.8,/usr/lib64/ruby/site_ruby/1.8,/usr/lib64/ruby/site_ruby/1.8/x86_64-linux,/usr/lib/ruby/site_ruby,/usr/lib64/ruby/site_ruby,/usr/lib64/site_ruby/1.8,/usr/lib64/site_ruby/1.8/x86_64-linux,/usr/lib64/site_ruby,/usr/lib/ruby/1.8,/usr/lib64/ruby/1.8,/usr/lib64/ruby/1.8/x86_64-linux,,~/.gem/ruby/1.8/gems/columnize-0.3.0/lib,~/.gem/ruby/1.8/gems/gimite-google-spreadsheet-ruby-0.0.2/lib,~/.gem/ruby/1.8/gems/hpricot-0.8.1/lib,~/.gem/ruby/1.8/gems/linecache-0.43/lib,~/.gem/ruby/1.8/gems/ruby-debug-base-0.10.3/lib,~/.gem/ruby/1.8/gems/sqlite3-ruby-1.2.4/lib,~/.gem/ruby/1.8/gems/tlsmail-0.0.1/lib,~/.gem/ruby/1.8/gems/tmail-1.2.3.1/lib,/usr/lib64/ruby/gems/1.8/gems/actionmailer-2.3.2/lib,/usr/lib64/ruby/gems/1.8/gems/actionpack-2.3.2/lib,/usr/lib64/ruby/gems/1.8/gems/activerecord-2.3.2/lib,/usr/lib64/ruby/gems/1.8/gems/activeresource-2.3.2/lib,/usr/lib64/ruby/gems/1.8/gems/activesupport-2.3.2/lib,/usr/lib64/ruby/gems/1.8/gems/atom-tools-2.0.1/lib,/usr/lib64/ruby/gems/1.8/gems/builder-2.1.2/l
+setlocal omnifunc=rubycomplete#Complete
+setlocal path=.,/usr/lib/ruby/site_ruby/1.8,/usr/lib/ruby/site_ruby/1.8/i386-linux,/usr/lib/ruby/site_ruby,/usr/lib/site_ruby/1.8,/usr/lib/site_ruby/1.8/i386-linux,/usr/lib/site_ruby,/usr/lib/ruby/1.8,/usr/lib/ruby/1.8/i386-linux,,/usr/lib/ruby/gems/1.8/gems/actionmailer-2.3.2/lib,/usr/lib/ruby/gems/1.8/gems/actionmailer-2.3.3/lib,/usr/lib/ruby/gems/1.8/gems/actionpack-2.3.2/lib,/usr/lib/ruby/gems/1.8/gems/actionpack-2.3.3/lib,/usr/lib/ruby/gems/1.8/gems/activerecord-2.3.2/lib,/usr/lib/ruby/gems/1.8/gems/activerecord-2.3.3/lib,/usr/lib/ruby/gems/1.8/gems/activeresource-2.3.2/lib,/usr/lib/ruby/gems/1.8/gems/activeresource-2.3.3/lib,/usr/lib/ruby/gems/1.8/gems/activesupport-2.3.2/lib,/usr/lib/ruby/gems/1.8/gems/activesupport-2.3.3/lib,/usr/lib/ruby/gems/1.8/gems/atom-tools-2.0.3/lib,/usr/lib/ruby/gems/1.8/gems/columnize-0.3.1/lib,/usr/lib/ruby/gems/1.8/gems/fastthread-1.0.7/ext,/usr/lib/ruby/gems/1.8/gems/fastthread-1.0.7/lib,/usr/lib/ruby/gems/1.8/gems/hpricot-0.8.1/lib,/usr/lib/ruby/gems/1.8/gems/linecache-0.43/lib,/usr/l
 setlocal nopreserveindent
 setlocal nopreviewwindow
 setlocal quoteescape=\\
@@ -147,12 +147,12 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 99 - ((15 * winheight(0) + 15) / 31)
+let s:l = 60 - ((13 * winheight(0) + 15) / 30)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-99
-normal! 06l
+60
+normal! 04l
 tabnext 1
 if exists('s:wipebuf')
   silent exe 'bwipe ' . s:wipebuf
