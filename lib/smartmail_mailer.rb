@@ -144,8 +144,8 @@ class SMailer
   def analysis( email_content, to_utf8=false )
     details = Hash.new
     email = TMail::Mail.parse(email_content)
-    subject = (to_utf8)? NKF.nkf("-w", email.subject):email.subject
-    body = (to_utf8)? NKF.nkf("-w", email.body):email.body
+    subject = (to_utf8)? NKF.nkf("-w", email.subject) : email.subject
+    body = (to_utf8)? NKF.nkf("-w", email.body) : email.body
     attachments = Array.new
     if email.has_attachments?
       for attachment in email.attachments
@@ -241,12 +241,14 @@ class SMailer
     workitem = MailItem.get_workitem( _store_id ) if _store_id
     if workitem
       desc = workitem.fields['__sm_description__']
-      _ps_type = "#{workitem.fields['step']}" + (_ps_type)? "_#{_ps_type}" : ''
-      _people = "#{workitem.fields['user_name']}<#{email[:from].join(',')}>"
+      step = SMSpreadsheet.get_stepname_from_spreadsheet( workitem.fei.wfname, _ps_type )
+      # puts "get_workflow_folder: #{step}"
+      _ps_type = "#{workitem.params['step']}" + (_ps_type)? "_#{_ps_type}" : ''
+      _people = "#{workitem.fields['user_name']}"
     end
     _today = Time.now
     _time_tag = "#{smartmail_tag}#{_today.year}-#{_today.month}-#{_today.day}"
-    folder_name = [desc, _ps_type, _time_tag, _people].compact
+    folder_name = [desc, _time_tag, _people, step].compact
     folder_name.each {|tag| puts "use tag: #{tag}" }
     folder_name
   end

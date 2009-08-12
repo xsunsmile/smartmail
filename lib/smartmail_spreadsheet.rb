@@ -40,6 +40,19 @@ class SMSpreadsheet
     return result
   end
 
+  def self.get_stepname_from_spreadsheet( flow_name, step_name_short )
+    # TODO: remove dependency with constent varaiables
+    sheet_name, short_title, stepname = 
+    flow_name+"_steps", Kconv.toutf8('ステップ略称'), Kconv.toutf8('ステップ説明')
+    fields = get_fields_from_spreadsheet( sheet_name )
+    title_f = fields.find {|data| data[:title] == short_title && data[:contents] == "\{sm_step_short:#{step_name_short}\}"}
+    # puts "get_stepname_from_spreadsheet: flow:#{flow_name} title:#{title_f}"
+    return unless title_f
+    desc_field = fields.find {|data| data[:row] == title_f[:row] && data[:column] == title_f[:column]-1 }
+    result = desc_field[:contents]
+    return result
+  end
+
   def self.get_fields_from_spreadsheet( sheet_name )
     return unless sheet_name
     result = Array.new
