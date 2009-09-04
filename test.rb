@@ -1,18 +1,23 @@
 
-description = """
-{sm_del:question}
-下記の質問
-ーーーーーーーーーー
-{sm_get:question}
-ーーーーーーーーーー
-に対する答えです
+require 'smartmail_settings'
 
-{sm_get:answer}
+sets = SMSetting.load
+mail = sets['smartmail']['user_name']
+pass = sets['smartmail']['user_password']
+@@srv = GoogleCalendar::Service.new(mail, pass)
+feed_root = "http://www.google.com/calendar/feeds"
 
-"""
-description2 = "sm_reply_to:cp"
-# operation, operands = $1, $2 if /\{(sm_\w+):(.*)\}/ =~ description
-results = description.scan(/\{(sm_\w+):(.*)\}/)
-p results
+cals = sets['smartmail']['calendars']
+cal = cals.find {|it| it['name'] == "孫コウ" }
+read_write = "private/full"
+feed = "#{feed_root}/#{cal['ident']}/#{read_write}"
+# read_write = "private-42d02235f60d33aa9f07660c8a4f855e/basic"
+cal = GoogleCalendar::Calendar::new(@@srv, feed)
+event = cal.create_event
+event.title = 'test'
+event.desc = "test"
+event.where = ""
+event.st = Time.now
+event.en = Time.now
+event.save!
 
-# puts description2.gsub(/\{?(sm_\w+):(.*)\}?/,'result')

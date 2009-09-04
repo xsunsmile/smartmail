@@ -90,14 +90,13 @@ module OpenWFE
         puts "#{workitem.fields['fei_store_id']} === #{fei_store.id}"
         event = Hash.new
         desc = workitem.fields['__sm_description__']
-        event[:title] = "#{desc} #{workitem.fields['worker']}"
-        event[:desc] = "#{contents[:title]} #{contents[:body][:plain]}"
         mailer = SMailer.new
-        mailer.set_to(@send_to)
+
         mailer.set_reply_with_wfid( fei_store.id )
+        mailer.set_to(@send_to)
+        puts "detected attach: #{workitem["attachment"]}" if workitem["attachment"]
         mailer.set_subject(contents[:title]).set_body(contents[:body], format)
         mailer.set_attach( workitem["attachment"] ) if workitem["attachment"]
-        puts "detected attach: #{workitem["attachment"]}" if workitem["attachment"]
         # p "process workitem: #{workitem}"
         scheduler = Rufus::Scheduler.start_new
         def scheduler.handle_exception (job, exception)
@@ -106,8 +105,12 @@ module OpenWFE
         end
         s_reminder = workitem.fields['__sm_reminder__'] || nil
         s_timeout = workitem.fields['__sm_timeout__'] || nil
-        event[:end] = Rufus::parse_time_string(s_timeout) if s_timeout
-        SMGoogleCalendar.create_event( event )
+        event[:title] = "#{desc} #{contents[:title]} #{@user_name}"
+        event[:desc] = "#{contents[:body][:plain]}"
+        event[:end] = Time.now + Rufus::parse_time_string(s_timeout) if s_timeout
+        user_calendar = (@user_name == 'フロー管理者')? 'default' : @user_name
+        error = SMGoogleCalendar.create_event( event, user_calendar )
+        puts error if error
         # block no reply steps to send reminder emails
         wait_reply = workitem.params['wait_for_reply']
         puts "reminder at #{s_reminder}, #{s_timeout}, wait_reply:#{wait_reply}"
@@ -125,7 +128,7 @@ module OpenWFE
               end
               unless first_time
                 mailer.set_subject("#{@reminder_header}" + contents[:title])
-                mailer.set_body(contents[:body], format)
+                # mailer.set_body(contents[:body], format)
               end
               puts "#{@user_name} reminder: #{s_reminder}, #{s_timeout}, id:#{fei_id}?[#{is_next_step}]"
               mailer.send

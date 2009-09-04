@@ -10,6 +10,23 @@ smartmail:
   spreadsheet_key: 0Aiz991afIPnTdGRjZFJ0RTJBdXhHQlI3T1Z6V0RDaHc
   store_name: smartmail
   deal_with_tag: 受け付け
+  calendars:
+    - name: default
+      ident: "smart.mailflow%40gmail.com"
+    - name: "事務員1"
+      ident: "tcd4k7ud81ns2iulfco0612it4%40group.calendar.google.com"
+    - name: "事務員2"
+      ident: "ujpr1df0jj8gm5f9pjuq63l4rs%40group.calendar.google.com"
+    - name: "事務員3"
+      ident: "tcd4k7ud81ns2iulfco0612it4%40group.calendar.google.com"
+    - name: "吉井あさ"
+      ident: "iio9j7fkgautvu00h4gb34q360%40group.calendar.google.com"
+    - name: "孫コウ"
+      ident: "689ssgmohv2drlu4kjl3bgfv14%40group.calendar.google.com"
+    - name: "王リンキ"
+      ident: "mf0lj9d0fdv6gem0mjthi2ub0k%40group.calendar.google.com"
+    - name: "ゆっこ"
+      ident: "dbcarmo3aama5c94i5ltfb0ieg%40group.calendar.google.com"
   reminder:
     header: "【reminder】"
     contents: "下記の内容のreminderです。\n"

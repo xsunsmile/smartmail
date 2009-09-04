@@ -54,8 +54,8 @@ class SMailer
     reply_to = @from_address.split(/@/)
     @mail.from = "#{reply_to[0]}+#{wfid}@#{reply_to[1]}"
     @mail.reply_to = @mail.from
-    # p "from:#{@mail.from}, reply_to: #{@mail.reply_to}"
-    self
+    p "from:#{@mail.from}, reply_to: #{@mail.reply_to}"
+    "mailto:#{@mail.reply_to.first}"
   end
 
   def set_subject(subject)
@@ -65,25 +65,27 @@ class SMailer
   end
 
   def set_body( body, use_html=false )
-    set_text_body( body )
-    set_html_body( body ) if use_html == 'html'
+    body_mail = TMail::Mail.new
+    set_text_body( body, body_mail )
+    set_html_body( body, body_mail ) if use_html == 'html'
+    @mail.parts.push body_mail 
     self
   end
 
-  def set_html_body( body )
-    @mail.set_content_type 'multipart','alternative'
+  def set_html_body( body, parent )
+    parent.set_content_type 'multipart','alternative'
     main_html = TMail::Mail.new
     main_html.set_content_type 'text', 'html', {'charset'=>'iso-2022-jp'}
     # main_html.body = URI.escape(Kconv.tojis(body[:html]))
     main_html.body = Kconv.tojis(body[:html])
-    @mail.parts.push main_html
+    parent.parts.push main_html
   end
 
-  def set_text_body( body )
+  def set_text_body( body, parent )
     main_text = TMail::Mail.new
     main_text.set_content_type 'text', 'plain', {'charset'=>'iso-2022-jp'}
     main_text.body = Kconv.tojis(body[:plain])
-    @mail.parts.push main_text
+    parent.parts.push main_text
   end
 
   def print
@@ -93,7 +95,7 @@ class SMailer
   def send(times=3)
     @mail.date = Time.now
     @mail.write_back
-    p "do send email to:#{@to_address}"
+    p "do send email to:#{@mail.from} -> #{@to_address} "
     return unless @to_address
     @smtp_server.enable_tls(OpenSSL::SSL::VERIFY_NONE)
     begin
@@ -128,6 +130,7 @@ class SMailer
     attach.set_content_type 'application','octet-stream','name' => file_name
     attach.set_content_disposition 'attachment','filename'=> file_name
     attach.transfer_encoding = 'base64'
+    @mail.set_content_type 'multipart','mixed'
     @mail.parts.push attach
     self
   end
@@ -243,7 +246,7 @@ class SMailer
       desc = workitem.fields['__sm_description__']
       step = SMSpreadsheet.get_stepname_from_spreadsheet( workitem.fei.wfname, _ps_type )
       # puts "get_workflow_folder: #{step}"
-      _ps_type = "#{workitem.params['step']}" + (_ps_type)? "_#{_ps_type}" : ''
+      _ps_type = "#{step}_#{_ps_type}"
       _people = "#{workitem.fields['user_name']}"
     end
     _today = Time.now

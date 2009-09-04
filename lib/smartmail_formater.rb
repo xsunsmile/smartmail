@@ -311,7 +311,8 @@ bottom;
   end
 
   def self.html_options
-    "<a href='mailto:MAIL?subject=TITLE&body=CONTENTS'>SELECTION</a><br/>\n"
+    "<br><a href='mailto:MAIL?subject=TITLE&amp;body=CONTENTS'>SELECTION</a><br/>\n" +
+    "<a href='mailto:MAIL'>SELECTIONの返信先: MAIL</a><br/>\n"
     # "<a href='mailto:MAIL?subject=TITLE'>SELECTION</a><br/>\n"
   end
 
@@ -399,7 +400,7 @@ MAIL
         # end
         # puts "#{@@underline}replace:#{replace} --> to:#{_value}#{@@normal}"
         _value = _value.gsub(/\r\n|\r|\n/,'%0D%0A')
-        _original.gsub!( replace ) { " #{_value} " }
+        _original.gsub!( replace ) { _value }
         # puts "#{@@underline}#{option}:#{_original}#{@@normal}"
       end
       _original = _original.gsub('[NEW_LINE]',"\r\n")

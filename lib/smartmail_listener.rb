@@ -32,6 +32,7 @@ require 'openwfe/listeners/listener'
 require 'openwfe/extras/participants/ar_participants'
 
 require 'smartmail_operation'
+require 'smartmail_spreadsheet'
 require 'smartmail_mailer'
 require 'smartmail_settings'
 require 'smartmail_gcal'
@@ -100,13 +101,17 @@ module OpenWFE
         workitem = MailItem.get_workitem( arwi_id, 'delete' )
         return unless workitem
         puts "listener got wi:#{workitem.class}, #{workitem}"
-        workitem.fields["attachment"] = email[:attachment]
+        workitem["attachment"] = email[:attachment]
         begin
           SMOperation.build( email, workitem )
+          email[:subject] = Kconv.toutf8(email[:subject])
+          # _ps_type = $1 if /\+([a-z]+)?_?([\d]+)@/ =~ email[:to]
+          # step = SMSpreadsheet.get_stepname_from_spreadsheet( workitem.fei.wfname, _ps_type )
           event = Hash.new
-          event[:title] = "#{workitem.params['step']}:: #{email[:subject]}"
+          event[:title] = "#{email[:subject]}"
           event[:desc] = "#{email[:body]}"
-          SMGoogleCalendar.create_event( event )
+          calendar_name = workitem.fields['user_name'] || 'default'
+          SMGoogleCalendar.create_event( event, calendar_name )
         rescue Exception => e
           puts "decode_workitem error: #{e.message}"
         end

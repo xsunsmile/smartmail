@@ -4,24 +4,38 @@ require 'smartmail_settings'
 
 class SMGoogleCalendar
 
-  @@cal, @@sev, @@feed = nil, nil, nil
+  @@cals, @@sev, @@feed_root, @@smartmail_cal, @@settings = [], nil, nil, nil, nil
+
+  def self.load_settings
+    puts "open_calendar"
+    @@settings = SMSetting.load
+    mail = @@settings['smartmail']['user_name']
+    pass = @@settings['smartmail']['user_password']
+    @@srv = GoogleCalendar::Service.new(mail, pass)
+    @@feed_root = "http://www.google.com/calendar/feeds/__USER__/private/full"
+  end
 
   def self.open_calendar
-    puts "open_calendar"
-    settings = SMSetting.load
-    mail = settings['smartmail']['user_name']
-    pass = settings['smartmail']['user_password']
-    feed_root = "http://www.google.com/calendar/feeds/#{mail.sub(/@/,'%40')}"
-    read_only = "private-fcde53caff5aa60f7a391985055611dd/basic"
-    read_write = "private/full"
-    @@feed = "#{feed_root}/#{read_write}"
-    @@srv = GoogleCalendar::Service.new(mail, pass)
-    @@cal = GoogleCalendar::Calendar::new(@@srv, @@feed)
+    load_settings unless @@settings
+    cals = @@settings['smartmail']['calendars']
+    cals.each do |cal|
+      cal_name = cal['name']
+      feed = @@feed_root.sub(/__USER__/, cal['ident'])
+      cal_obj = GoogleCalendar::Calendar::new(@@srv, feed)
+      @@cals << { :name => cal_name, :cal => cal_obj }
+    end
+    @@smartmail_cal = @@cals.find {|it| it[:name] == 'default' }[:cal]
+    # p @@cals, @@smartmail_cal
+  end
+
+  def self.calendars
+    open_calendar unless @@cals.size > 0
+    @@cals
   end
 
   def self.list_events
-    open_calendar unless @@cal
-    events = @@cal.events
+    open_calendar unless @@smartmail_cal
+    events = @@smartmail_cal.events
     events.each do |event|
       puts "#{event.title} #{event.where} #{event.desc}"
       all_day = event.allday
@@ -34,19 +48,26 @@ class SMGoogleCalendar
 
   def self.list_events_by_query( query )
     open_calendar unless @@srv
-    events = @@srv.query( feed, :"max-results" => 5 )
-    puts events
+    # events = @@srv.query( feed, :"max-results" => 5 )
+    # puts events
   end
 
-  def self.create_event( new_event )
-    open_calendar unless @@cal
-    event = @@cal.create_event
-    event.title = new_event[:title]
-    event.desc = new_event[:desc]
-    event.where = new_event[:where] || ""
-    event.st = new_event[:start] || Time.now
-    event.en = new_event[:end] || Time.now
-    event.save!
+  def self.create_event( new_event, username = "default" )
+    open_calendar unless @@cals.size > 0
+    cal_item = @@cals.find {|it| it[:name] == username }
+    return "can not find cal: #{username}" unless cal_item
+    cal = cal_item[:cal]
+    begin
+      event = cal.create_event
+      event.title = new_event[:title]
+      event.desc = new_event[:desc]
+      event.where = new_event[:where] || ""
+      event.st = new_event[:start] || Time.now
+      event.en = new_event[:end] || Time.now
+      event.save!
+    rescue Exception => e
+      return e.message
+    end
   end
 
 end
