@@ -31,9 +31,10 @@ require 'openwfe/service'
 require 'openwfe/listeners/listener'
 require 'openwfe/extras/participants/ar_participants'
 
-require 'lib/smartmail_operation'
-require 'lib/smartmail_mailer'
-require 'lib/smartmail_settings'
+require 'smartmail_operation'
+require 'smartmail_mailer'
+require 'smartmail_settings'
+require 'smartmail_gcal'
 
 module OpenWFE
   module Extras
@@ -99,9 +100,13 @@ module OpenWFE
         workitem = MailItem.get_workitem( arwi_id, 'delete' )
         return unless workitem
         puts "listener got wi:#{workitem.class}, #{workitem}"
-        workitem.attributes["attachment"] = email[:attachment]
+        workitem.fields["attachment"] = email[:attachment]
         begin
           SMOperation.build( email, workitem )
+          event = Hash.new
+          event[:title] = "#{workitem.params['step']}:: #{email[:subject]}"
+          event[:desc] = "#{email[:body]}"
+          SMGoogleCalendar.create_event( event )
         rescue Exception => e
           puts "decode_workitem error: #{e.message}"
         end

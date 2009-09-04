@@ -253,7 +253,4 @@ class SMailer
     folder_name
   end
 
-  def test
-  end
-
 end

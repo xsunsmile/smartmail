@@ -109,6 +109,9 @@ class ProcessesController < ApplicationController
 
     # TODO : use Rails callback
 
+    # puts "Process_Contr.ps: #{process.inspect}"
+    # puts "Process_Contr.Tree: #{process.current_tree.inspect}"
+
     render(
       :text => "var #{var} = #{process.current_tree.to_json};",
       :content_type => 'text/javascript')

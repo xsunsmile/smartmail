@@ -27,9 +27,10 @@ require 'kconv'
 require 'rufus/scheduler'
 require 'openwfe/util/xml'
 require 'openwfe/util/json'
-require 'lib/smartmail_mailer'
-require 'lib/smartmail_composer'
-require 'lib/smartmail_settings'
+require 'smartmail_mailer'
+require 'smartmail_gcal'
+require 'smartmail_composer'
+require 'smartmail_settings'
 
 module OpenWFE
   module Extras
@@ -87,6 +88,10 @@ module OpenWFE
         return unless contents
         fei_store = MailItem.store_workitem( workitem )
         puts "#{workitem.fields['fei_store_id']} === #{fei_store.id}"
+        event = Hash.new
+        desc = workitem.fields['__sm_description__']
+        event[:title] = "#{desc} #{workitem.fields['worker']}"
+        event[:desc] = "#{contents[:title]} #{contents[:body][:plain]}"
         mailer = SMailer.new
         mailer.set_to(@send_to)
         mailer.set_reply_with_wfid( fei_store.id )
@@ -99,8 +104,10 @@ module OpenWFE
           puts "job #{job.job_id} caught exception '#{exception}'"
           # puts exception.backtrace
         end
-        s_reminder = workitem.fields['__sm_reminder__']
-        s_timeout = workitem.fields['__sm_timeout__']
+        s_reminder = workitem.fields['__sm_reminder__'] || nil
+        s_timeout = workitem.fields['__sm_timeout__'] || nil
+        event[:end] = Rufus::parse_time_string(s_timeout) if s_timeout
+        SMGoogleCalendar.create_event( event )
         # block no reply steps to send reminder emails
         wait_reply = workitem.params['wait_for_reply']
         puts "reminder at #{s_reminder}, #{s_timeout}, wait_reply:#{wait_reply}"

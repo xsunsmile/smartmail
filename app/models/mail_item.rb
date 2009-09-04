@@ -28,6 +28,7 @@ class MailItem < ActiveRecord::Base
     _id = (/\d+/ =~ id_or_fei)? find_by_id( id_or_fei ) : find_by_name( id_or_fei )
     return unless _id
     ar = ArWorkitem.find_by_id( _id.item )
+    return unless ar
     workitem = ar.to_owfe_workitem if ar
     if destroy == 'delete'
       ar.destroy && _id.destroy
