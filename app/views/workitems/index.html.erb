@@ -26,6 +26,7 @@
   <%= link_to_function 'search', 'doSearch();' %>
 </div>
 
+<div class="column align-left">
 <table class='coll'>
   <thead>
     <tr>
@@ -57,6 +58,7 @@
   </tr>
 <% end -%>
 </table>
+</div>
 
 <% if request.query_string.size > 0 or params[:wfid] %>
 <div class="workitems_nav align-right">

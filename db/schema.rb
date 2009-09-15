@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20090612172846) do
+ActiveRecord::Schema.define(:version => 20090914091505) do
 
   create_table "ar_workitems", :force => true do |t|
     t.string   "fei"
@@ -104,6 +104,13 @@ ActiveRecord::Schema.define(:version => 20090612172846) do
   end
 
   add_index "user_groups", ["user_id", "group_id"], :name => "index_user_groups_on_user_id_and_group_id", :unique => true
+
+  create_table "user_process_relations", :force => true do |t|
+    t.integer  "user_id"
+    t.integer  "wfid"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
 
   create_table "users", :force => true do |t|
     t.string   "login",                     :limit => 40

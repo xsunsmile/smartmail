@@ -138,6 +138,11 @@ class ProcessesController < ApplicationController
     options = { :variables => { 'launcher' => current_user.login } }
 
     fei = ruote_engine.launch(li, options)
+    
+    relation = UserProcessRelation.new
+    relation.user_id = current_user.id
+    relation.wfid = fei.wfid
+    relation.save!
 
     sleep 0.200
 

@@ -55,8 +55,7 @@ class SMGoogleCalendar
   def self.create_event( new_event, username = "default" )
     open_calendar unless @@cals.size > 0
     cal_item = @@cals.find {|it| it[:name] == username }
-    return "can not find cal: #{username}" unless cal_item
-    cal = cal_item[:cal]
+    cal = (cal_item)? cal_item[:cal] : @@smartmail_cal
     begin
       event = cal.create_event
       event.title = new_event[:title]

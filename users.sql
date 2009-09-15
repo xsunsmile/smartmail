@@ -1,0 +1,13 @@
+
+insert into users values(5,'nakanishi','Nakanishi Hodaka','nakanishi.h.ab@m.titech.ac.jp','63710bb278180c26c60fe6d362881472490ea10c','da4b9237bacccdf19c0760cab7aec4a8359010b0','2009-08-11 18:25:26','2009-08-11 18:25:26',NULL, NULL);
+insert into users values(6,'ochiai','Ochiai','RHE00343@nifty.com','63710bb278180c26c60fe6d362881472490ea10c','da4b9237bacccdf19c0760cab7aec4a8359010b0','2009-08-11 18:25:26','2009-08-11 18:25:26',NULL, NULL);
+insert into users values(7,'harada','Harada Akinori','harada.a.ab@m.titech.ac.jp','63710bb278180c26c60fe6d362881472490ea10c','da4b9237bacccdf19c0760cab7aec4a8359010b0','2009-08-11 18:25:26','2009-08-11 18:25:26',NULL, NULL);
+insert into users values(8,'otsuka','Otsuka Eri','otsuka.e.aa@m.titech.ac.jp','63710bb278180c26c60fe6d362881472490ea10c','da4b9237bacccdf19c0760cab7aec4a8359010b0','2009-08-11 18:25:26','2009-08-11 18:25:26',NULL, NULL);
+insert into users values(9,'kawahara','Kawahara Nao','kawahara.n.aa@m.titech.ac.jp','63710bb278180c26c60fe6d362881472490ea10c','da4b9237bacccdf19c0760cab7aec4a8359010b0','2009-08-11 18:25:26','2009-08-11 18:25:26',NULL, NULL);
+insert into users values(10,'nishikiori','Nishikiori SouIchi','nishikiori.s.aa@m.titech.ac.jp','63710bb278180c26c60fe6d362881472490ea10c','da4b9237bacccdf19c0760cab7aec4a8359010b0','2009-08-11 18:25:26','2009-08-11 18:25:26',NULL, NULL);
+insert into users values(11,'sase','Sase Tsuyoshi','stake@hkg.odn.ne.jp','63710bb278180c26c60fe6d362881472490ea10c','da4b9237bacccdf19c0760cab7aec4a8359010b0','2009-08-11 18:25:26','2009-08-11 18:25:26',NULL, NULL);
+insert into users values(12,'ogawa','Ogawa Hirofumi','h.ogawa@gakushikai.jp','63710bb278180c26c60fe6d362881472490ea10c','da4b9237bacccdf19c0760cab7aec4a8359010b0','2009-08-11 18:25:26','2009-08-11 18:25:26',NULL, NULL);
+insert into users values(13,'igawa','Igawa Kousaku','kousaku.i.aa@m.titech.ac.jp','63710bb278180c26c60fe6d362881472490ea10c','da4b9237bacccdf19c0760cab7aec4a8359010b0','2009-08-11 18:25:26','2009-08-11 18:25:26',NULL, NULL);
+insert into users values(14,'rinki','Ou Rinki','rinkiou@gmail.com','63710bb278180c26c60fe6d362881472490ea10c','da4b9237bacccdf19c0760cab7aec4a8359010b0','2009-08-11 18:25:26','2009-08-11 18:25:26',NULL, NULL);
+insert into users values(15,'higuchi','Higuchi Ryo','higuchi.r.aa@m.titech.ac.jp','63710bb278180c26c60fe6d362881472490ea10c','da4b9237bacccdf19c0760cab7aec4a8359010b0','2009-08-11 18:25:26','2009-08-11 18:25:26',NULL, NULL);
+insert into users values(16,'hamaguchi','Hamaguchi Saisyuu','hamaguchi.n-go@nhk.or.jp','63710bb278180c26c60fe6d362881472490ea10c','da4b9237bacccdf19c0760cab7aec4a8359010b0','2009-08-11 18:25:26','2009-08-11 18:25:26',NULL, NULL);

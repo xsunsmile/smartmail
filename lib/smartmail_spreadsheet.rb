@@ -5,6 +5,7 @@ class SMSpreadsheet
 
   @@config = 'config/config.yml'
   @@spreadSheet = nil
+  @@spreadSheet_contents = nil
 
   def self.set_config_file( config_file )
     @@config = config_file
@@ -54,7 +55,13 @@ class SMSpreadsheet
   end
 
   def self.get_fields_from_spreadsheet( sheet_name )
-    return unless sheet_name
+    return 'no sheet_name given.' unless sheet_name
+    # puts "create spreadsheet cache for #{sheet_name}" unless @@spreadSheet_contents
+    @@spreadSheet_contents = Hash.new unless @@spreadSheet_contents
+    result = @@spreadSheet_contents[sheet_name]
+    # puts "use spreadsheet cache for #{sheet_name} result:#{result.size}" if result
+    # p "result: #{result.inspect}" if result
+    return Marshal.load(Marshal.dump(result)) if result
     result = Array.new
     get_spreadsheet until @@spreadSheet
     # p @@spreadSheet.worksheets.collect {|ws| ws.title}.join(' , ')
@@ -67,11 +74,17 @@ class SMSpreadsheet
       # puts "idx:#{row_number}, info:#{info}"
       worksheet_title.each_index do |column_number|
         str = Kconv.toutf8(worksheet_title[column_number])
-        field = { :row => row_number, :column => column_number, :title => str, :contents => info[column_number] }
+        field = { 
+          :row => row_number, 
+          :column => column_number, 
+          :title => str, 
+          :contents => info[column_number] 
+        }
         result << field
       end
     end
     # result.each {|res| res.each_pair { |k,v| puts "#{k} --> #{v}" } }
+    @@spreadSheet_contents[sheet_name] = (result.size>0)? result : nil
     result
   end
 

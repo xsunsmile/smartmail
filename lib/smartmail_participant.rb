@@ -54,6 +54,10 @@ module OpenWFE
         ldebug { "consuming workitem" }
         @current_workitem = workitem
         begin
+          relation = UserProcessRelation.find_by_wfid( workitem.fei.wfid )
+          user = User.find_by_id( (relation)? relation.user_id : -1 )
+          @send_to = user.email if user
+          relation.destroy if relation
           step = workitem.params['step'] || 'unknown_step'
           color_puts "#{step} consuming workitem:"
           print "consume: #{workitem}\n"

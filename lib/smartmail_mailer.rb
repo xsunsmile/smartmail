@@ -104,6 +104,7 @@ class SMailer
       end
     rescue Exception => e
       times -= 1
+      puts "send email error: #{e.message}"
       send(times) if times >= 0
     end
     # p "sent email: #{@to_address}"
@@ -182,8 +183,10 @@ class SMailer
       @imap_server.login( @account, @password )
       @imap_server.select( folder_name )
       @imap_server.search( filter ).each do |message_id|
-        email_contents_env = @imap_server.fetch(message_id, "RFC822")
-        # puts "fetch email: #{message_id}"
+        # fetch_attr = '(UID RFC822.SIZE ENVELOPE BODY[HEADER] BODY[TEXT])'
+        fetch_attr = 'RFC822'
+        email_contents_env = @imap_server.fetch(message_id, fetch_attr)
+        puts "fetch email: #{message_id}"
         next unless email_contents_env
         email_contents = email_contents_env[0].attr["RFC822"]
         puts "analysis email: #{message_id}"
@@ -231,8 +234,8 @@ class SMailer
       next unless line
       line = Kconv.toutf8( line )
       description = $2.gsub(/=/,'') if /#{pattern}/ =~ line
-        # p "test description: #{line} --> desc:#{description} BINGO! " if description.size > 0
-        break if description.size > 0
+      # p "test description: #{line} --> desc:#{description} BINGO! " if description.size > 0
+      break if description.size > 0
     end
     description
   end

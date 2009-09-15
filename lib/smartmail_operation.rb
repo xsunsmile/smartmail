@@ -49,14 +49,20 @@ class SMOperation
 
   def self.get_step_information( process_name, step_name )
     sheet_name = process_name + '_steps'
-    # puts "get_step_information: get sheet, #{sheet_name}"
+    puts "get_step_information: get sheet, #{sheet_name}, step: #{step_name}"
     fields = SMSpreadsheet.get_fields_from_spreadsheet( sheet_name )
-    step_field = fields.find {|f|
+    step_field = nil
+    fields.each do |f|
       contents = f[:contents]
+      # puts "conts: #{contents}, step_name: #{step_name}"
       step_name_in_spreadsheet = $2 if /\{sm_step(_short)?:(.*)\}/ =~ contents
-      step_name_in_spreadsheet == step_name
-    }
-    this_stepinfo = fields.collect { |f| f if f[:row] == step_field[:row] }
+      next unless step_name_in_spreadsheet
+      if step_name_in_spreadsheet == step_name
+        step_field = f
+        break
+      end
+    end
+    this_stepinfo = fields.collect{|f| f if f[:row] == step_field[:row] }
     this_stepinfo.compact! if this_stepinfo
     # puts "this_stepinfo: #{this_stepinfo.inspect}"
     this_stepinfo
