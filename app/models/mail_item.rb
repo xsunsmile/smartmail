@@ -9,18 +9,22 @@ class MailItem < ActiveRecord::Base
   @@normal = [0x1B].pack("c*") + "[0m\n"
 
   def self.store_workitem( workitem )
-    name = YAML.dump( workitem.fei )
+    # name = YAML.dump( workitem.fei )
+    name = workitem.fei
+    puts "#{@@underline}find workitem:#{@@normal} for fei: #{name}"
     store = find_by_name( name ) || MailItem.new
+    puts "#{@@underline}find store:#{@@normal} for store: #{store}"
     if store.item
-      # puts "#{@@underline}find workitem:#{@@normal} #{name}"
       ar = ArWorkitem.find_by_id( store.item )
+      puts "#{@@underline}find ar:#{@@normal} for ar: #{ar}"
       ar.destroy if ar
     end
-    ar = ArWorkitem.from_owfe_workitem( workitem )
+    ar = ArWorkitem.from_owfe_workitem( workitem ) rescue 'can not create ar_workitem'
+    puts "#{@@underline}found ar:#{@@normal} for ar: #{ar}"
     store.name = name
     store.item = ar.id
     store.save!
-    # puts "#{@@underline}store workitem:#{@@normal} #{name}"
+    puts "#{@@underline}store workitem:#{@@normal} #{name}"
     return store
   end
 

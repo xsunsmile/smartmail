@@ -110,7 +110,7 @@ class SMOperation
     next_step
   end
 
-  def self.replay_quotation_starts( message )
+  def self.reply_quotation_starts( message )
     _message = message.to_s.chomp
     docomo_reply_pattern = /^>$/
       marker_pattern = />(:*)(\d+-\w+)(:*)|>(#+)\s(.*)\s(#+)/
@@ -128,8 +128,8 @@ class SMOperation
     return unless message
     result = Array.new
     message.split(/\n/).each do |line|
-      puts "reply start: #{line}" if replay_quotation_starts( line )
-      break if replay_quotation_starts( line )
+      puts "reply start: #{line}" if reply_quotation_starts( line )
+      break if reply_quotation_starts( line )
       result << line
     end
     result.join("\n")
@@ -189,9 +189,16 @@ class SMOperation
   def self.sm_reminder( operation, operands, workitem )
     return unless workitem
     times = operands.split(/,/)
-    s_reminder, s_timeout = times[0], times[1]
-    workitem.fields['__sm_reminder__'] = s_reminder
-    workitem.fields['__sm_timeout__'] = s_timeout
+    s_reminder = workitem.fields['__sm_reminder__']
+    unless s_reminder
+      s_reminder = times[0]
+      workitem.fields['__sm_reminder__'] = s_reminder
+    end
+    s_timeout = workitem.fields['__sm_timeout__']
+    unless s_timeout
+      s_timeout = times[1]
+      workitem.fields['__sm_timeout__'] = s_timeout
+    end
     f_now = Time.now.to_f
     reminder_at = Time.at(f_now + Rufus.parse_time_string(s_reminder))
     timeout_at = Time.at(f_now + Rufus.parse_time_string(s_timeout))
@@ -312,12 +319,12 @@ class SMOperation
       unset_field = ( set_field == true_field )? false_field : true_field
       set_value = ( data.size > 0 )? data : true
       message = "#{@@underline}sm_set_if user_step:#{user_chose_step} == con:#{condition}, set:#{set_field}, v:#{set_value}, unset:#{unset_field} #{@@normal}"
-          workitem.fields[ set_field ] = set_value
-          #TODO: to just to cancel, not also report if 'cp'
-          workitem.fields[ unset_field ] = nil
-          puts "#{underline}#{worker}#{message}#{@@normal}"
-          workitem.fields['__sm_build__'] = ''
-          workitem.fields['__sm_option__'] = ''
+      workitem.fields[ set_field ] = set_value
+      #TODO: to just to cancel, not also report if 'cp'
+      workitem.fields[ unset_field ] = nil
+      puts "#{underline}#{worker}#{message}#{@@normal}"
+      workitem.fields['__sm_build__'] = ''
+      workitem.fields['__sm_option__'] = ''
     end
     return nil
   end
