@@ -884,7 +884,7 @@ var FluoCan = function() {
     renderFlow(canvas, canvas.flow, {'highlight': highlight});
   }
  
-  # TODO: change wi to other words
+  // TODO: change wi to other words
   function drawWorkitem (c, exp) {
     var ww = c.measure('wi');
     c.save();

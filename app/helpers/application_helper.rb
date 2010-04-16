@@ -137,7 +137,7 @@ module ApplicationHelper
       '<script>var proc_tree = null;</script>'
     end
 
-    puts "tree: #{tree}"
+    # puts "tree: #{tree}"
 
     hl = if e = opts[:expid]
       "\nFluoCan.highlight('fluo', '#{e}');"

@@ -6,7 +6,7 @@ smartmail:
   imap_server_port: 993
   from_address: smart.mailflow@gmail.com
   user_name: smart.mailflow@gmail.com
-  user_password:  gks-smartmail
+  user_password:  xsun-smartmail
   spreadsheet_key: 0Aiz991afIPnTdGRjZFJ0RTJBdXhHQlI3T1Z6V0RDaHc
   store_name: smartmail
   deal_with_tag: 受け付け
