@@ -1,4 +1,5 @@
 log/*.log
+log/mongrel.80.pid
 tmp/**/*
 doc/api
 doc/app
