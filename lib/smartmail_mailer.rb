@@ -43,7 +43,7 @@ class SMailer
   end
 
   def set_to(to_address)
-    # p "emailto: #{to_address}"
+    p "set_emailto: #{to_address}"
     return unless to_address
     @mail.to = to_address.split(/,/)
     @to_address = to_address.split(/,/)

@@ -56,14 +56,15 @@ module OpenWFE
         begin
           relation = UserProcessRelation.find_by_wfid( workitem.fei.wfid )
           user = User.find_by_id( (relation)? relation.user_id : -1 )
-          @send_to = user.email if user
+          puts "Can not get email address: #{user.inspect}" unless (user && user.email)
+          @send_to = user.email if (user && user.email)
           relation.destroy if relation
           step = workitem.params['step'] || 'unknown_step'
           color_puts "#{step} consuming workitem:"
           print "consume: #{workitem}\n"
           email_workitem( workitem )
           wait_reply = (workitem.params['wait_for_reply'] == true)
-          # store_workitem( workitem ) if wait_reply
+          MailItem.get_workitem( workitem.fei, 'delete', "consume" ) unless wait_reply
           reply_to_engine( workitem ) unless wait_reply
         rescue Exception => e
           color_puts e.message
@@ -90,18 +91,21 @@ module OpenWFE
         store_related_information( workitem )
         contents = SMComposer.compose( workitem, format )
         return unless contents
-        fei_store = MailItem.store_workitem( workitem )
-        puts "#{workitem.fields['fei_store_id']} === #{fei_store.id}"
-        event = Hash.new
-        desc = workitem.fields['__sm_description__']
-        mailer = SMailer.new
-
-        mailer.set_reply_with_wfid( fei_store.id )
-        mailer.set_to(@send_to)
-        puts "detected attach: #{workitem["attachment"]}" if workitem["attachment"]
-        mailer.set_subject(contents[:title]).set_body(contents[:body], format)
-        mailer.set_attach( workitem["attachment"] ) if workitem["attachment"]
-        # p "process workitem: #{workitem}"
+        begin
+          fei_store = MailItem.store_workitem( workitem )
+          puts "#{workitem.fields['fei_store_id']} === #{fei_store.id}"
+          event = Hash.new
+          desc = workitem.fields['__sm_description__']
+          mailer = SMailer.new
+          mailer.set_reply_with_wfid( fei_store.id )
+          mailer.set_to(@send_to)
+          puts "detected attach: #{workitem["attachment"]}" if workitem["attachment"]
+          mailer.set_subject(contents[:title]).set_body(contents[:body], format)
+          mailer.set_attach( workitem["attachment"] ) if workitem["attachment"]
+          # p "process workitem: #{workitem}"
+        rescue => exception
+          puts exception.inspect
+        end
         scheduler = Rufus::Scheduler.start_new
         def scheduler.handle_exception (job, exception)
           puts "job #{job.job_id} caught exception '#{exception}'"

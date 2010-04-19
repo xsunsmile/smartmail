@@ -26,6 +26,12 @@ if RuotePlugin.ruote_engine
   owner = OpenWFE::Extras::SmartmailParticipant.new( :name => 'フロー管理者', :email => '_owner' )
   RuotePlugin.ruote_engine.register_participant( "owner", owner )
 
+  professor = OpenWFE::Extras::SmartmailParticipant.new( :name => '教授', :email => 'xsunsmile+khiga@gmail.com' )
+  RuotePlugin.ruote_engine.register_participant( "professor", professor )
+
+  secretaries = OpenWFE::Extras::SmartmailParticipant.new( :name => '教授', :email => 'xsunsmile+sec@gmail.com' )
+  RuotePlugin.ruote_engine.register_participant( "secretaries", secretaries )
+
   RuotePlugin.ruote_engine.register_participant 'set_timeout' do |workitem|
     begin
     step, process_name = workitem.params['step'], workitem.fei.wfname
@@ -45,6 +51,46 @@ if RuotePlugin.ruote_engine
   end
 
   RuotePlugin.ruote_engine.register_participant 'print' do |workitem|
+
+    begin
+      email_contents = SMComposer.compose( workitem )
+      # puts email_contents
+
+      step = workitem.params['step']
+
+      if step == 'send_job'
+        worker = workitem.fields['worker']
+        message1 = { 
+          :body => "#{worker}質問です。\n\r\n", 
+          :to => "mail+he_#{workitem.fei.wfid}@question.com" 
+        }
+        message2 = { 
+          :body => "#{worker} 結果です。\n\r\n",
+          :to => ""
+        }
+        result = (rand(100)%5==1)? message1 : message2
+        puts "step:#{step} result:#{result}"
+      end
+
+      if step == 'help'
+        worker = workitem.fields['worker']
+        result = { 
+          :body => "#{worker}答えです \n\r\n",
+          :to => "mail+an_#{workitem.fei.wfid}@question.com"
+        }
+        puts "step:#{step} result:#{result}"
+      end
+
+      SMOperation.build( result, workitem )
+
+    rescue Exception => e
+      puts $!
+      puts e.backtrace
+    end
+
+  end
+
+  RuotePlugin.ruote_engine.register_participant 'buy_item' do |workitem|
 
     begin
       email_contents = SMComposer.compose( workitem )

@@ -139,7 +139,7 @@ class SMOperation
     return unless description && description.to_s.size > 0
     description.scan(/\{(sm_\w+):(.*)\}/).each do |oper|
       operation, operands = oper[0], oper[1]
-      result = get_operation_results( operation, operands, workitem )
+      result = get_operation_results( operation, operands, workitem ) || "No result for #{operation}:#{operands}"
       description.sub!(/\{#{operation}:#{operands}\}/,result)
         # puts "#{@@underline}oper:#{operation} opera:#{operands} res:#{description}#{@@normal}"
     end
@@ -179,6 +179,7 @@ class SMOperation
     # puts "#{format}, #{return_time.strftime("%Y-%m-%d %H:%M:%S")}"
     return_time
   end
+
 
   def self.sm_timeout( operation, operands, workitem )
     return unless workitem
@@ -278,11 +279,15 @@ class SMOperation
         # p "sm_aggregate0: _hash:#{_hash.class}, #{_hash.inspect}" if another_hash
         next unless another_hash
         operands.split(/,/).each do |set_field|
-          info = (_hash[set_field] || '').chomp || ''
+          info_from = (_hash[set_field].is_a? Array)? _hash[set_field].join(",") : (_hash[set_field] || '')
+          info = info_from.to_s.chomp || ''
           next unless info.size > 0
           pre_info, new_info = workitem.fields[ set_field ], info
           _pre_info = pre_info.gsub(@@separator){''} if pre_info
-          store_info = ( _pre_info == new_info )? pre_info : "#{pre_info}#{@@separator}#{new_info}"
+          store_info = ( _pre_info =~ /#{new_info}/ )? pre_info : "#{pre_info}#{@@separator}#{new_info}"
+          puts "#{@@underline}sm_aggregate: pre_info:#{_pre_info} --> #{_pre_info =~ /^\d+$/}#{@@normal}"
+          puts "#{@@underline}sm_aggregate: new_info:#{new_info} --> #{new_info =~ /^\d+$/}#{@@normal}"
+          store_info = _pre_info.to_i + new_info.to_i if (_pre_info =~ /^\d+$/ && new_info =~ /^\d+$/)
           puts "#{@@underline}sm_aggregate: #{set_field} --> #{store_info}#{@@normal}"
           workitem.fields[ set_field ] = store_info
         end
@@ -298,6 +303,27 @@ class SMOperation
     data = delete_reply_qoutations( data )
     workitem.fields[ operands ] = data
     workitem.fields['__sm_build__'] = ''
+    return
+  end
+
+  def self.sm_add_polling_if( operation, operands, workitem )
+    return unless workitem
+    user_chose_step = workitem.fields['__sm_option__']
+    user_chose_step = workitem.params["step"] unless user_chose_step
+    # user_chose_step: no information will set false_field !
+    return unless user_chose_step
+    operands.split(/,/).each do |cond|
+      condition, true_field, false_field = $1, $2, $3 if /(\w*)_(\w*)_(\w*)/ =~ cond
+      set_field = ( condition == user_chose_step )? true_field : false_field
+      # unset_field = ( set_field == true_field )? false_field : true_field
+      set_value = (workitem.fields[ true_field ] || '0').to_i + 1
+      message = "#{@@underline}sm_add_polling_if user_step:#{user_chose_step} == con:#{condition}, set:#{set_field}, v:#{set_value} #{true_field}:#{workitem.fields[true_field]}, #{false_field}:#{workitem.fields[false_field]} #{@@normal}"
+      workitem.fields[ set_field ] = set_value
+      #TODO: to just to cancel, not also report if 'cp'
+      puts "\n#{message}"
+      # workitem.fields['__sm_build__'] = ''
+      # workitem.fields['__sm_option__'] = ''
+    end
     return
   end
 

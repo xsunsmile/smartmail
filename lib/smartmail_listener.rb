@@ -98,7 +98,8 @@ module OpenWFE
         arwi_id = get_arwi_id_for_decode( email )
         puts "listener got arwi:#{arwi_id}"
         return unless arwi_id && arwi_id.to_s.size > 0
-        workitem = MailItem.get_workitem( arwi_id, 'delete' )
+        workitem = MailItem.get_workitem( arwi_id, 'delete', "listener" )
+        puts "listener can not got workitem for arwi:#{arwi_id}" unless workitem
         return unless workitem
         puts "listener got wi:#{workitem.class}, #{workitem}"
         workitem["attachment"] = email[:attachment]
