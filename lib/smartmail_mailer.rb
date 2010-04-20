@@ -92,7 +92,7 @@ class SMailer
     pp @mail
   end
 
-  def send(times=3)
+  def send_email(times=3)
     @mail.date = Time.now
     @mail.write_back
     p "do send email to:#{@mail.from} -> #{@to_address} "
@@ -105,7 +105,7 @@ class SMailer
     rescue Exception => e
       times -= 1
       puts "send email error: #{e.message}"
-      send(times) if times >= 0
+      send_email(times) if times >= 0
     end
     # p "sent email: #{@to_address}"
   end
@@ -142,7 +142,7 @@ class SMailer
     set_subject( subject ) if subject
     set_body( message ) if message
     attachment.each { |att| set_attach( att ) } if attachment
-    send
+    send_email
   end
 
   def analysis( email_content, to_utf8=false )

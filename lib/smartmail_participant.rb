@@ -91,21 +91,17 @@ module OpenWFE
         store_related_information( workitem )
         contents = SMComposer.compose( workitem, format )
         return unless contents
-        begin
-          fei_store = MailItem.store_workitem( workitem )
-          puts "#{workitem.fields['fei_store_id']} === #{fei_store.id}"
-          event = Hash.new
-          desc = workitem.fields['__sm_description__']
-          mailer = SMailer.new
-          mailer.set_reply_with_wfid( fei_store.id )
-          mailer.set_to(@send_to)
-          puts "detected attach: #{workitem["attachment"]}" if workitem["attachment"]
-          mailer.set_subject(contents[:title]).set_body(contents[:body], format)
-          mailer.set_attach( workitem["attachment"] ) if workitem["attachment"]
-          # p "process workitem: #{workitem}"
-        rescue => exception
-          puts exception.inspect
-        end
+        # store workitem 2 times
+        fei_store = MailItem.store_workitem( workitem, 'replace workitem' )
+        puts "#{workitem.fields['fei_store_id']} === #{fei_store.id}"
+        desc = workitem.fields['__sm_description__']
+        mailer = SMailer.new
+        mailer.set_reply_with_wfid( fei_store.id )
+        mailer.set_to(@send_to)
+        puts "detected attach: #{workitem["attachment"]}" if workitem["attachment"]
+        mailer.set_subject(contents[:title]).set_body(contents[:body], format)
+        mailer.set_attach( workitem["attachment"] ) if workitem["attachment"]
+        # p "process workitem: #{workitem}"
         scheduler = Rufus::Scheduler.start_new
         def scheduler.handle_exception (job, exception)
           puts "job #{job.job_id} caught exception '#{exception}'"
@@ -113,6 +109,7 @@ module OpenWFE
         end
         s_reminder = workitem.fields['__sm_reminder__'] || nil
         s_timeout = workitem.fields['__sm_timeout__'] || nil
+        event = Hash.new
         event[:title] = "#{desc} #{contents[:title]} #{@user_name}"
         event[:desc] = "#{contents[:body][:plain]}"
         event[:end] = Time.now + Rufus::parse_time_string(s_timeout) if s_timeout
@@ -139,13 +136,13 @@ module OpenWFE
                 # mailer.set_body(contents[:body], format)
               end
               puts "#{@user_name} reminder: #{s_reminder}, #{s_timeout}, id:#{fei_id}?[#{is_next_step}]"
-              mailer.send
+              mailer.send_email
               first_time = false
             rescue Rufus::Scheduler::TimeOutError => toe
             end
           end
         else
-          mailer.send
+          mailer.send_email
         end
       end
 
