@@ -12,7 +12,7 @@ class MailItem < ActiveRecord::Base
     log_file = open('log/aritems.log','a+') unless log_file
     store = find_by_name( workitem.fei )
     if store
-      ar = ArWorkitem.find_by_id( store.item )
+      ar = ArWorkitem.find_by_fei( store.item )
       if ar
         ar.destroy
         log_file.puts "# mailitem delete old ar #{ar.id}\n -- #{workitem.fei}"
@@ -34,8 +34,8 @@ class MailItem < ActiveRecord::Base
     log_file.puts "\ncreate: ar #{ar.id} for [#{message}]\n -- #{name}"
     store = MailItem.new unless store
     store.name = name
-    store.item = (ar)? ar.id : '-1'
-    store.save
+    store.item = ar.fei
+    store.save!
     log_file.puts "\ncreate: mi #{store.id} -- ar #{ar.id} [#{message}]"
     log_file.close
     return store
@@ -43,10 +43,11 @@ class MailItem < ActiveRecord::Base
 
   def self.get_workitem( id_or_fei, destroy='', from='listener' )
     log_file = open('log/aritems.log','a+') unless log_file
+    id_or_fei = id_or_fei.to_s
     _id = (/\d+/ =~ id_or_fei)? find_by_id( id_or_fei ) : find_by_name( id_or_fei )
     log_file.puts "can not get ar.id for #{id_or_fei}" unless _id
     return unless _id
-    ar = ArWorkitem.find_by_id( _id.item )
+    ar = ArWorkitem.find_by_fei( _id.item )
     log_file.puts "can not get ar for #{id_or_fei}" unless ar
     return unless ar
     workitem = ar.to_owfe_workitem if ar

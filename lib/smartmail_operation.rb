@@ -219,6 +219,8 @@ class SMOperation
 
   def self.sm_del( operation, operands, workitem )
     operands.split(/,/).each do |field|
+      pre_item = workitem.fields[ field ]
+      workitem.fields[ "__#{field}_#{Time.now.to_f}" ] = pre_item
       workitem.fields[ field ] = nil
     end
     return
@@ -279,11 +281,14 @@ class SMOperation
         # p "sm_aggregate0: _hash:#{_hash.class}, #{_hash.inspect}" if another_hash
         next unless another_hash
         operands.split(/,/).each do |set_field|
+          pre_item = workitem.fields[ set_field ]
+          workitem.fields[ "__#{set_field}_#{Time.now.to_f}" ] = pre_item
+          workitem.fields[ set_field ] = nil
           info_from = (_hash[set_field].is_a? Array)? _hash[set_field].join(",") : (_hash[set_field] || '')
           info = info_from.to_s.chomp || ''
           next unless info.size > 0
           pre_info, new_info = workitem.fields[ set_field ], info
-          _pre_info = pre_info.gsub(@@separator){''} if pre_info
+          _pre_info = pre_info.to_s.gsub(@@separator){''} if pre_info
           store_info = ( _pre_info =~ /#{new_info}/ )? pre_info : "#{pre_info}#{@@separator}#{new_info}"
           puts "#{@@underline}sm_aggregate: pre_info:#{_pre_info} --> #{_pre_info =~ /^\d+$/}#{@@normal}"
           puts "#{@@underline}sm_aggregate: new_info:#{new_info} --> #{new_info =~ /^\d+$/}#{@@normal}"
@@ -306,23 +311,42 @@ class SMOperation
     return
   end
 
+  def self.sm_get_polling_result( operation, operands, workitem )
+    return unless workitem
+    wfid, polling_value = workitem.fei.wfid, 0
+    operands.split(/,/).each do |item|
+      Poll.find_all_by_wfid( wfid ).each do |poll_item|
+        polling_value = polling_value + 1 if poll_item.polling_name.to_s == item
+      end
+      workitem.fields[ "polling_#{item}" ] = polling_value
+      message = "sm_get_polling_result #{item} == #{polling_value}"
+      puts "\n#{@@underline}#{message}#{@@normal}"
+    end
+    return
+  end
+
   def self.sm_add_polling_if( operation, operands, workitem )
     return unless workitem
     user_chose_step = workitem.fields['__sm_option__']
     user_chose_step = workitem.params["step"] unless user_chose_step
-    # user_chose_step: no information will set false_field !
     return unless user_chose_step
     operands.split(/,/).each do |cond|
-      condition, true_field, false_field = $1, $2, $3 if /(\w*)_(\w*)_(\w*)/ =~ cond
-      set_field = ( condition == user_chose_step )? true_field : false_field
-      # unset_field = ( set_field == true_field )? false_field : true_field
-      set_value = (workitem.fields[ true_field ] || '0').to_i + 1
-      message = "#{@@underline}sm_add_polling_if user_step:#{user_chose_step} == con:#{condition}, set:#{set_field}, v:#{set_value} #{true_field}:#{workitem.fields[true_field]}, #{false_field}:#{workitem.fields[false_field]} #{@@normal}"
+      condition, set_field = $1, $2 if /(\w*)_(\w*)/ =~ cond
+      next unless condition == user_chose_step
+      set_value = (workitem.fields[ set_field ] || '0').to_i + 1
+      poll_item = Poll.new
+      poll_item.fei = workitem.fei
+      poll_item.wfid = workitem.fei.wfid
+      poll_item.polling_name = set_field
+      poll_item.polling_value = set_value
+      poll_item.mailitem_id = workitem.fields[ "fei_store_id" ]
+      poll_item.username = workitem.fields[ "user_name" ]
+      poll_item.email_from = workitem.fields[ "email_from" ]
+      poll_item.save!
       workitem.fields[ set_field ] = set_value
-      #TODO: to just to cancel, not also report if 'cp'
-      puts "\n#{message}"
-      # workitem.fields['__sm_build__'] = ''
-      # workitem.fields['__sm_option__'] = ''
+      message = "sm_add_polling_if user_step:#{user_chose_step} == con:#{condition}"
+      message += " set:#{set_field} --> v:#{set_value}"
+      puts "\n#{@@underline}#{message}#{@@normal}"
     end
     return
   end

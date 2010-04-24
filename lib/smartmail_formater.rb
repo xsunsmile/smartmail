@@ -367,7 +367,7 @@ MAIL
         if is_options
           replace_to_contents = format_options( replace_to_contents, format )
         else
-          replace_to_contents = replace_to_contents.gsub(/\r\n|\r|\n/, "<br>\r\n") if format == 'html'
+          replace_to_contents = replace_to_contents.to_s.gsub(/\r\n|\r|\n/, "<br>\r\n") if format == 'html'
         end
         # p "format_contents2: pre:#{pre_contents} , rep:#{replace_str}, to:#{replace_to_contents}"
         pre_contents = pre_contents.gsub( replace_str ) { replace_to_contents }

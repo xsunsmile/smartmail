@@ -1,0 +1,17 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+
+one:
+  mailitem_id: 1
+  fei: MyString
+  username: MyString
+  email_from: MyString
+  polling_name: MyString
+  polling_value: MyString
+
+two:
+  mailitem_id: 1
+  fei: MyString
+  username: MyString
+  email_from: MyString
+  polling_name: MyString
+  polling_value: MyString

@@ -26,12 +26,6 @@ if RuotePlugin.ruote_engine
   owner = OpenWFE::Extras::SmartmailParticipant.new( :name => 'フロー管理者', :email => '_owner' )
   RuotePlugin.ruote_engine.register_participant( "owner", owner )
 
-  professor = OpenWFE::Extras::SmartmailParticipant.new( :name => '教授', :email => 'xsunsmile+khiga@gmail.com' )
-  RuotePlugin.ruote_engine.register_participant( "professor", professor )
-
-  secretaries = OpenWFE::Extras::SmartmailParticipant.new( :name => '教授', :email => 'xsunsmile+sec@gmail.com' )
-  RuotePlugin.ruote_engine.register_participant( "secretaries", secretaries )
-
   RuotePlugin.ruote_engine.register_participant 'set_timeout' do |workitem|
     begin
     step, process_name = workitem.params['step'], workitem.fei.wfname
@@ -47,6 +41,32 @@ if RuotePlugin.ruote_engine
     workitem.fields['timeout'] = s_timeout
     rescue Exception => e
       puts "set_timeout: #{e.message}"
+    end
+  end
+
+  RuotePlugin.ruote_engine.register_participant 'poll' do |workitem|
+    begin
+    # args --> v:positiveAnswers,l:positiveMust,b:polling_break
+    args, wfid = workitem.params['args'], workitem.fei.wfid
+    poll_infos = Hash.new
+    args.split(/,/).each do |field|
+      poll_infos['polling_name'] = $1 if field =~ /^v:(.*)/
+      poll_infos['polling_limit'] = $1 if field =~ /^l:(.*)/
+      poll_infos['break_point'] = $1 if field =~ /^b:(.*)/
+    end
+    polling_value, polling_name, limit = 0, poll_infos['polling_name'], workitem.fields[poll_infos['polling_limit']]
+    Poll.find_all_by_wfid( wfid ).each do |item|
+      polling_value = polling_value + 1 if item.polling_name.to_s == polling_name.to_s
+    end
+    workitem.fields[ polling_name ] = polling_value if polling_value > 0
+    puts "polling: #{polling_name}:#{polling_value} <=> #{limit}, #{poll_infos['break_point']}"
+    if limit =~ /^\d+$/ && polling_value >= limit.to_i
+      workitem.fields[ poll_infos['break_point'] ] = true
+      puts "polling: #{poll_infos['break_point']} ==> true"
+    end
+    rescue Exception => e
+      puts "polling error: #{e.message}"
+      puts "polling error: #{e.inspect}"
     end
   end
 
