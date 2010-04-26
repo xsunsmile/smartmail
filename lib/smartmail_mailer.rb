@@ -27,8 +27,15 @@ class SMailer
     @authtype = params["login"] || 'plain'
     smtp_server = params["smtp_server"] || 'localhost'
     smtp_server_port = params["smtp_server_port"] || '25'
-    @smtp_server = Net::SMTP.new( smtp_server, smtp_server_port )
-    @imap_server = Net::IMAP.new( params['imap_server'], params['imap_server_port'], true)
+    while !@smtp_server
+      @smtp_server = Net::SMTP.new( smtp_server, smtp_server_port ) rescue "smailer: Warning: #$!"
+      sleep 10
+    end
+    while !@imap_server
+      @imap_server = 
+        Net::IMAP.new( params['imap_server'], params['imap_server_port'], true) rescue "smailer: Warning: #$!"
+      sleep 10
+    end
     @from_address = params["from_address"]
   end
 

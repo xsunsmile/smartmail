@@ -1,6 +1,6 @@
 debug*
 log/*.log
-log/mongrel.80.pid
+log/*.pid
 tmp/**/*
 doc/api
 doc/app

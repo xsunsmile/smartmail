@@ -187,7 +187,6 @@ module ApplicationHelper
   </script>
     }
 
-    puts "tree_info: #{tree}"
   end
 
   #

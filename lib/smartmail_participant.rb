@@ -56,12 +56,15 @@ module OpenWFE
         begin
           relation = UserProcessRelation.find_by_wfid( workitem.fei.wfid )
           user = User.find_by_id( (relation)? relation.user_id : -1 )
-          puts "Can not get email address: #{user.inspect}" unless (user && user.email)
-          @send_to = user.email if (user && user.email)
-          relation.destroy if relation
+          if user && user.email
+            @send_to = user.email if @send_to == '_owner'
+            workitem.fields['applicant'] = user.name
+          else
+            puts "Can not get owner's email address: #{user.inspect}"
+          end
           step = workitem.params['step'] || 'unknown_step'
           color_puts "#{step} consuming workitem:"
-          print "consume: #{workitem}\n"
+          puts "consume: #{workitem}\n"
           email_workitem( workitem )
           wait_reply = (workitem.params['wait_for_reply'] == true)
           MailItem.get_workitem( workitem.fei, 'delete', "consume" ) unless wait_reply
@@ -74,6 +77,8 @@ module OpenWFE
 
       def cancel (cancelitem)
         ArWorkitem.destroy_all([ 'fei = ?', cancelitem.fei.to_s ])
+        relation = UserProcessRelation.find_by_wfid( cancelitem.fei.wfid )
+        relation.destroy if relation
       end
 
       protected
@@ -93,7 +98,7 @@ module OpenWFE
         return unless contents
         # store workitem 2 times
         fei_store = MailItem.store_workitem( workitem, 'replace workitem' )
-        puts "#{workitem.fields['fei_store_id']} === #{fei_store.id}"
+        puts "\n#{workitem.fields['fei_store_id']} === #{fei_store.id}"
         desc = workitem.fields['__sm_description__']
         mailer = SMailer.new
         mailer.set_reply_with_wfid( fei_store.id )
@@ -167,7 +172,8 @@ module OpenWFE
             end
           end
         end
-        # p "email is: #{@send_to} --> #{email}"
+        puts "fix_email_address: #{@send_to} --> #{email}"
+        puts " -- fix_email_address --> #{workitem}"
         @send_to = email
       end
 

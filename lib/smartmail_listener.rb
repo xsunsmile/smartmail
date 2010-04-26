@@ -103,6 +103,7 @@ module OpenWFE
         return unless workitem
         puts "listener got wi:#{workitem.class}, #{workitem}"
         workitem["attachment"] = email[:attachment]
+        workitem["email_from"] = email[:from].join(',')
         begin
           SMOperation.build( email, workitem )
           email[:subject] = Kconv.toutf8(email[:subject])
