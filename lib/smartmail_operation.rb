@@ -260,11 +260,13 @@ class SMOperation
   def self.sm_get( operation, operands, workitem )
     message = ''
     operands.split(/,/).each do | field |
-    info = workitem.fields[ field ].to_s || ''
-    info = delete_reply_qoutations( info ) || ''
-    info = info.split(@@separator).join("\n")
-    # puts "#{@@underline}sm_get oper3:#{operation}, #{field}, #{info} #{@@normal}"
-    message += info
+      field, default_value = $1, $2 if field =~ /(.*)\.(.*)/
+      info = workitem.fields[ field ].to_s || ''
+      info = delete_reply_qoutations( info ) || ''
+      info = info.split(@@separator).join("\n")
+      info = default_value unless info.size > 0
+      puts "sm_get: #{field} --> #{info} , #{default_value}"
+      message += info.to_s
     end
     message
   end
@@ -281,24 +283,18 @@ class SMOperation
         # p "sm_aggregate0: _hash:#{_hash.class}, #{_hash.inspect}" if another_hash
         next unless another_hash
         operands.split(/,/).each do |set_field|
-          pre_item = workitem.fields[ set_field ]
-          workitem.fields[ "__#{set_field}_#{Time.now.to_f}" ] = pre_item
-          workitem.fields[ set_field ] = nil
-          info_from = (_hash[set_field].is_a? Array)? _hash[set_field].join(",") : (_hash[set_field] || '')
+          info_from = (_hash[set_field].is_a? Array)? _hash[set_field].join(" ") : (_hash[set_field] || '')
           info = info_from.to_s.chomp || ''
           next unless info.size > 0
           pre_info, new_info = workitem.fields[ set_field ], info
           _pre_info = pre_info.to_s.gsub(@@separator){''} if pre_info
           store_info = ( _pre_info =~ /#{new_info}/ )? pre_info : "#{pre_info}#{@@separator}#{new_info}"
-          puts "#{@@underline}sm_aggregate: pre_info:#{_pre_info} --> #{_pre_info =~ /^\d+$/}#{@@normal}"
-          puts "#{@@underline}sm_aggregate: new_info:#{new_info} --> #{new_info =~ /^\d+$/}#{@@normal}"
           store_info = _pre_info.to_i + new_info.to_i if (_pre_info =~ /^\d+$/ && new_info =~ /^\d+$/)
-          puts "#{@@underline}sm_aggregate: #{set_field} --> #{store_info}#{@@normal}"
+          puts "sm_aggregate: set #{set_field} --> #{store_info}"
           workitem.fields[ set_field ] = store_info
         end
       end
     end
-    print "sm_aggregate out: #{workitem}\n"
     return nil
   end
 
@@ -332,6 +328,7 @@ class SMOperation
     return unless user_chose_step
     operands.split(/,/).each do |cond|
       condition, set_field = $1, $2 if /(\w*)_(\w*)/ =~ cond
+      puts "\nsm_add_polling_if user_step:#{user_chose_step} == con:#{condition}"
       next unless condition == user_chose_step
       set_value = (workitem.fields[ set_field ] || '0').to_i + 1
       poll_item = Poll.new
@@ -344,9 +341,8 @@ class SMOperation
       poll_item.email_from = workitem.fields[ "email_from" ]
       poll_item.save!
       workitem.fields[ set_field ] = set_value
-      message = "sm_add_polling_if user_step:#{user_chose_step} == con:#{condition}"
-      message += " set:#{set_field} --> v:#{set_value}"
-      puts "\n#{@@underline}#{message}#{@@normal}"
+      message = "sm_add_polling_if set:#{set_field} --> v:#{set_value}"
+      puts "\n#{message}"
     end
     return
   end

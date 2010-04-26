@@ -34,9 +34,8 @@ class ProcessesController < ApplicationController
   #
   def index
 
-    all_processes = ruote_engine.process_statuses.values.sort_by { |ps|
-      ps.launch_time
-    }.reverse
+    all_processes = ruote_engine.process_statuses.values
+    all_processes = all_processes.sort_by { |ps| (ps)? ps.launch_time : Time.now }.reverse
 
     if wf = params[:workflow]
       all_processes = all_processes.select { |ps| ps.wfname == wf }
@@ -139,10 +138,12 @@ class ProcessesController < ApplicationController
 
     fei = ruote_engine.launch(li, options)
     
-    relation = UserProcessRelation.new
-    relation.user_id = current_user.id
-    relation.wfid = fei.wfid
-    relation.save!
+    unless UserProcessRelation.find_by_wfid( fei.wfid )
+      relation = UserProcessRelation.new
+      relation.user_id = current_user.id
+      relation.wfid = fei.wfid
+      relation.save!
+    end
 
     sleep 0.200
 
@@ -154,10 +155,10 @@ class ProcessesController < ApplicationController
 
       format.html {
         redirect_to :action => 'show', :id => fei.wfid }
-      format.json {
-        render :json => "{\"wfid\":#{fei.wfid}}", :status => 201 }
-      format.xml {
-        render :xml => "<wfid>#{fei.wfid}</wfid>", :status => 201 }
+        format.json {
+          render :json => "{\"wfid\":#{fei.wfid}}", :status => 201 }
+          format.xml {
+            render :xml => "<wfid>#{fei.wfid}</wfid>", :status => 201 }
     end
   end
 
@@ -178,7 +179,7 @@ class ProcessesController < ApplicationController
   #  return false unless current_user
   #  %w{ show index tree new }.include?(action_name) || current_user.is_admin?
   #end
-    # :login_required is sufficient
+  # :login_required is sufficient
 
   def parse_launchitem
 
@@ -192,55 +193,55 @@ class ProcessesController < ApplicationController
       return OpenWFE::Xml::launchitem_from_xml(request.body.read) \
         if ct.match(/xml$/)
 
-      return OpenWFE::Json.launchitem_from_h(request.body.read) \
-        if ct.match(/json$/)
+          return OpenWFE::Json.launchitem_from_h(request.body.read) \
+            if ct.match(/json$/)
 
-    rescue Exception => e
+            rescue Exception => e
 
-      raise ErrorReply.new(
+              raise ErrorReply.new(
         'failed to parse launchitem from request body', 400)
-    end
+            end
 
-    #
-    # then we have a form...
+          #
+          # then we have a form...
 
-    if definition_id = params[:definition_id]
+          if definition_id = params[:definition_id]
 
-      # is the user allowed to launch that process [definition] ?
+            # is the user allowed to launch that process [definition] ?
 
-      definition = Definition.find(definition_id)
+            definition = Definition.find(definition_id)
 
-      raise ErrorReply.new(
+            raise ErrorReply.new(
         'you are not allowed to launch this process', 403
-      ) unless current_user.may_launch?(definition)
+                                ) unless current_user.may_launch?(definition)
 
-      params[:definition_url] = definition.local_uri if definition
+                                params[:definition_url] = definition.local_uri if definition
 
-    elsif definition_url = params[:definition_url]
+          elsif definition_url = params[:definition_url]
 
-      raise ErrorReply.new(
+            raise ErrorReply.new(
         'not allowed to launch process definitions from adhoc URIs', 400
-      ) unless current_user.may_launch_from_adhoc_uri?
+                                ) unless current_user.may_launch_from_adhoc_uri?
 
-    elsif definition = params[:definition]
+          elsif definition = params[:definition]
 
-      # is the user allowed to launch embedded process definitions ?
+            # is the user allowed to launch embedded process definitions ?
 
-      raise ErrorReply.new(
+            raise ErrorReply.new(
         'not allowed to launch embedded process definitions', 400
-      ) unless current_user.may_launch_embedded_process?
+                                ) unless current_user.may_launch_embedded_process?
 
-    else
+          else
 
-      raise ErrorReply.new(
+            raise ErrorReply.new(
         'failed to parse launchitem from request parameters', 400)
-    end
+          end
 
-    if fields = params[:fields]
-      params[:fields] = ActiveSupport::JSON::decode(fields)
-    end
+          if fields = params[:fields]
+            params[:fields] = ActiveSupport::JSON::decode(fields)
+          end
 
-    OpenWFE::LaunchItem.from_h(params)
-  end
-end
+          OpenWFE::LaunchItem.from_h(params)
+        end
+    end
 

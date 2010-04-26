@@ -30,8 +30,10 @@ class BuyingApplication < OpenWFE::ProcessDefinition
       end
       _if :test => "${f:professorDeny}" do
         participant :ref => 'owner', :step => 'forward_result'
-        participant :ref => 'secretaries', :step => 'buy_item'
-        participant :ref => 'professor', :step => 'buy_item'
+        sequence do
+          participant :ref => 'secretaries', :step => 'buy_item'
+          participant :ref => 'professor', :step => 'buy_item'
+        end
       end
     end
     participant :ref => 'owner', :step => 'cancel_process', :if => '${f:cancel}'
