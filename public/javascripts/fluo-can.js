@@ -26,7 +26,7 @@
 var FluoCon = {
 
   RGB_WHITE: 'rgb(255, 255, 255)',
-  RGB_HIGHLIGHT: 'rgb(220, 220, 220)',
+  RGB_HIGHLIGHT: 'rgb(255, 0, 0)',
   LINE_HEIGHT: 20,
   MIN_ACTIVITY_WIDTH: 110
 }

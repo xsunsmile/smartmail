@@ -40,6 +40,7 @@ module OpenWFE
 
       def initialize( options = {} )
         @current_workitem = nil
+        @wi_send_to = Hash.new
         @underline = [0x1B].pack("c*") + "[1;4;35m"
         @normal = [0x1B].pack("c*") + "[0m\n"
         @user_name, @send_to = Kconv.toutf8(options[:name]), options[:email]
@@ -56,8 +57,9 @@ module OpenWFE
         begin
           relation = UserProcessRelation.find_by_wfid( workitem.fei.wfid )
           user = User.find_by_id( (relation)? relation.user_id : -1 )
+          puts "user_process_relation: #{workitem.fei.wfid} => #{user.id}.#{user.email}, #{@send_to}\n"
           if user && user.email
-            @send_to = user.email if @send_to == '_owner'
+            @wi_send_to[ workitem.fei.wfid ] = user.email if @send_to == '_owner'
             workitem.fields['applicant'] = user.name
           else
             puts "Can not get owner's email address: #{user.inspect}"
@@ -91,18 +93,19 @@ module OpenWFE
         step = workitem.params["step"].gsub(/\"/,'') if workitem.params["step"]
         workitem.fields['user_name'] = @user_name
         color_puts "email_workitem: participant[#{step}:#{workitem.fields['worker']}]"
-        fix_email_address( workitem ) unless is_email_address(@send_to)
-        format = decide_email_format(@send_to)
+        send_to = @wi_send_to[ workitem.fei.wfid ] || @send_to
+        send_to = fix_email_address( workitem, send_to ) unless is_email_address(send_to)
+        format = decide_email_format(send_to)
         store_related_information( workitem )
         contents = SMComposer.compose( workitem, format )
         return unless contents
-        # store workitem 2 times
+        # TODO: do not store workitem 2 times
         fei_store = MailItem.store_workitem( workitem, 'replace workitem' )
         puts "\n#{workitem.fields['fei_store_id']} === #{fei_store.id}"
         desc = workitem.fields['__sm_description__']
         mailer = SMailer.new
         mailer.set_reply_with_wfid( fei_store.id )
-        mailer.set_to(@send_to)
+        mailer.set_to(send_to)
         puts "detected attach: #{workitem["attachment"]}" if workitem["attachment"]
         mailer.set_subject(contents[:title]).set_body(contents[:body], format)
         mailer.set_attach( workitem["attachment"] ) if workitem["attachment"]
@@ -160,21 +163,21 @@ module OpenWFE
         workitem.fields['step'] = workitem.params["step"].gsub(/\"/,'')
       end
 
-      def fix_email_address( workitem )
-        email = workitem[@send_to]
+      def fix_email_address( workitem, send_to )
+        email = workitem[send_to]
         unless email
           workitem.attributes.each do |attr| 
             next unless attr.is_a? Hash
             attr.values.each do |_hash|
               next unless _hash.is_a? Hash
-              email = _hash[@send_to]
+              email = _hash[send_to]
               break if email && email.size > 0
             end
           end
         end
-        puts "fix_email_address: #{@send_to} --> #{email}"
+        puts "fix_email_address: #{send_to} --> #{email}"
         puts " -- fix_email_address --> #{workitem}"
-        @send_to = email
+        email
       end
 
       def is_email_address( email_str )

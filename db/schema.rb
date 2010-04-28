@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20100421170022) do
+ActiveRecord::Schema.define(:version => 20100426065232) do
 
   create_table "ar_workitems", :force => true do |t|
     t.string   "fei"
@@ -119,7 +119,7 @@ ActiveRecord::Schema.define(:version => 20100421170022) do
 
   create_table "user_process_relations", :force => true do |t|
     t.integer  "user_id"
-    t.integer  "wfid"
+    t.string   "wfid"
     t.datetime "created_at"
     t.datetime "updated_at"
   end

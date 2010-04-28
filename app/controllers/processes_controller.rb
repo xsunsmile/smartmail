@@ -138,6 +138,7 @@ class ProcessesController < ApplicationController
 
     fei = ruote_engine.launch(li, options)
     
+    puts "user_process_relation: #{fei.wfid} => #{current_user.id}.#{current_user.email}\n"
     unless UserProcessRelation.find_by_wfid( fei.wfid )
       relation = UserProcessRelation.new
       relation.user_id = current_user.id

@@ -1,7 +1,7 @@
 
 class BuyingApplication < OpenWFE::ProcessDefinition
 
-  description "買い物申請"
+  description "買い物申請 投票版"
 
   sequence do
     cursor :rewind_if => '${f:rework}', :break_if => '${f:cancel}' do

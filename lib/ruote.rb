@@ -93,9 +93,23 @@ module OpenWFE
 
   class FlowExpressionId
 
+    def get_participant_name
+      ar_workitem = OpenWFE::Extras::ArWorkitem.find_by_fei( self.to_s )
+      if ar_workitem
+        workitem = ar_workitem.to_owfe_workitem
+        pname = workitem.fields['user_name']
+        pname = workitem.fields['applicant'] if pname == 'フロー管理者'
+      end
+    end
+
     def to_web_s
       si = sub_instance_id == '' ? '' : "#{sub_instance_id} "
-      "#{si}#{expid} #{expname}"
+      if expname == 'participant'
+        pname = get_participant_name
+        return "今は#{pname}の仕事待ちです"
+      else
+        return "" # "#{si}#{expid} #{expname}"
+      end
     end
   end
 
