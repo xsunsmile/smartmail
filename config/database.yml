@@ -9,7 +9,7 @@
 development:
   adapter: mysql
   encoding: utf8
-  database: rw2_development
+  database: rw2_development_dev
   username: root
   password:
   reconnect: true

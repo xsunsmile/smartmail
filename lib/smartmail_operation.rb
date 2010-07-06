@@ -7,7 +7,7 @@ require 'lib/smartmail_settings'
 
 class SMOperation
 
-  @@list_prefix = '#'
+  @@list_prefix = '<'
   @@list_pair_join_character = ' , '
   @@separator = "__sm_sep__"
 
@@ -383,7 +383,7 @@ class SMOperation
     pattern = /\{.*_start\}(.*)\{.*_end\}/
     data.gsub!(/\r\n|\r|\n|<br>/,'[NEWLINE]').gsub!(/>/,'')
     # puts "#{underline}sm_select#{@@normal} from data: #{data}"
-    selection = data.scan( pattern ).join('').split(/\[NEWLINE\]/).collect {|pp| pp if !(/#/ =~ pp) }.compact!
+    selection = data.scan( pattern ).join('').split(/\[NEWLINE\]/).collect {|pp| pp if !(/#{@@list_prefix}/ =~ pp) }.compact!
     selection.each {|it| it.gsub!(/\[NEWLINE\]/,"\n")}
     return unless selection
     selected_items = selection.collect {|item| item.gsub!(/\s/,''); item + "," if item.size > 0 }.compact
@@ -401,7 +401,7 @@ class SMOperation
     pattern = /\{.*_start\}(.*)\{.*_end\}/
     data.gsub!(/\r\n|\r|\n|<br>/,'[NEWLINE]').gsub!(/>/,'')
     # puts "#{underline}sm_select_if#{@@normal} from data: #{data}"
-    selection = data.scan( pattern ).join('').split(/\[NEWLINE\]/).collect {|pp| pp if !(/#/ =~ pp) }.compact!
+    selection = data.scan( pattern ).join('').split(/\[NEWLINE\]/).collect {|pp| pp if !(/#{@@list_prefix}/ =~ pp) }.compact!
     selected_items = 
       selection.collect {|item| item.gsub!(/\s|&nbsp;|　/,''); item + "," if item.size > 0 }.compact if selection
     data.gsub!(/\[NEWLINE\]/,"\n")

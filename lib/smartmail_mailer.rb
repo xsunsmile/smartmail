@@ -10,6 +10,47 @@ require 'nkf'
 require 'pp'
 require 'lib/smartmail_settings'
 
+module TMail
+  class Mail
+
+    def body_html
+      result = nil
+      if multipart?
+        parts.each do |part|
+          if part.multipart?
+            part.parts.each do |part2|
+              result = part2.unquoted_body if part2.content_type =~ /html/i
+            end
+          elsif !attachment?(part)
+            result = part.unquoted_body if part.content_type =~ /html/i
+          end
+        end
+      else
+        result = unquoted_body if content_type =~ /html/i
+      end
+      result
+    end
+
+    def body_plain
+      result = nil
+      if multipart?
+        parts.each do |part|
+          if part.multipart?
+            part.parts.each do |part2|
+              result = part2.unquoted_body if part2.content_type =~ /plain/i
+            end
+          elsif !attachment?(part)
+            result = part.unquoted_body if part.content_type =~ /plain/i
+          end
+        end
+      else
+        result = unquoted_body if content_type =~ /plain/i
+      end
+      result
+    end
+  end
+end
+
 class SMailer
 
   @@attachment_path = 'tmp/attachments/'
@@ -34,7 +75,7 @@ class SMailer
     while !@imap_server
       @imap_server = 
         Net::IMAP.new( params['imap_server'], params['imap_server_port'], true) rescue "smailer: Warning: #$!"
-      sleep 10
+        sleep 10
     end
     @from_address = params["from_address"]
   end
@@ -122,8 +163,9 @@ class SMailer
   end
 
   def set_attach(single_file_path)
-    puts "set_attach: #{single_file_path.inspect}"
+    # puts "set_attach: #{single_file_path.inspect}"
     single_file_path = single_file_path.first if single_file_path.is_a? Array
+    single_file_path.gsub!(/__sm_sep__/,'')
     return unless single_file_path
     attach = TMail::Mail.new
     file_path = Kconv.toutf8(single_file_path)
@@ -132,7 +174,7 @@ class SMailer
     file_path, file_name = $1, $2
     tmp_file_path = File.expand_path(file_name,file_path)
     attach.body = Base64.encode64(File.read(tmp_file_path))
-    puts "set_attach: #{file_path}"
+    # puts "set_attach: #{file_path}"
     file_name = Kconv.tojis(file_name).split(//,1).pack('m').chomp
     file_name = "=?ISO-2022-JP?B?"+file_name.gsub('\n', '')+"?="
     attach.set_content_type 'application','octet-stream','name' => file_name
@@ -156,7 +198,8 @@ class SMailer
     details = Hash.new
     email = TMail::Mail.parse(email_content)
     subject = (to_utf8)? NKF.nkf("-w", email.subject) : email.subject
-    body = (to_utf8)? NKF.nkf("-w", email.body) : email.body
+    body = (to_utf8)? NKF.nkf("-w", email.body_plain) : email.body_plain
+    body.gsub!(/\//,"／")
     attachments = Array.new
     if email.has_attachments?
       for attachment in email.attachments
@@ -167,7 +210,9 @@ class SMailer
     end
     details[:subject], details[:body] = subject, body
     # details[:from], details[:attachment] = email.from, attachments
-    details[:to], details[:from], details[:attachment] = email['Delivered-To'].to_s, email.from, attachments
+    details[:to], details[:from] = email['Delivered-To'].to_s, email.from
+    puts "analysis --> attachments: #{attachments.inspect}"
+    details[:attachment] = attachments if attachments.size > 0
     details.each_pair{|k,v| puts "analysis email: #{k} => #{v}"}
     details
   end

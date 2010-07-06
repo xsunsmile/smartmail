@@ -107,7 +107,11 @@ module OpenWFE
         mailer.set_reply_with_wfid( fei_store.id )
         mailer.set_to(send_to)
         puts "detected attach: #{workitem["attachment"]}" if workitem["attachment"]
-        mailer.set_subject(contents[:title]).set_body(contents[:body], format)
+        process_name_now = workitem["__sm_jobname__"]
+        process_name_now = "Process(#{workitem.fei.wfid})" unless process_name_now
+        process_name_now.gsub!(/__sm_sep__/,'')
+        subject_new = "#{process_name_now} #{contents[:title]}(#{fei_store.id})"
+        mailer.set_subject(subject_new).set_body(contents[:body], format)
         mailer.set_attach( workitem["attachment"] ) if workitem["attachment"]
         # p "process workitem: #{workitem}"
         scheduler = Rufus::Scheduler.start_new
@@ -123,7 +127,7 @@ module OpenWFE
         event[:end] = Time.now + Rufus::parse_time_string(s_timeout) if s_timeout
         user_calendar = (@user_name == 'フロー管理者')? 'default' : @user_name
         error = SMGoogleCalendar.create_event( event, user_calendar )
-        puts error if error
+        # puts "\ngcal error: #{error.inspect}" if error
         # block no reply steps to send reminder emails
         wait_reply = workitem.params['wait_for_reply']
         puts "reminder at #{s_reminder}, #{s_timeout}, wait_reply:#{wait_reply}"

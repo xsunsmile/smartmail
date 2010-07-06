@@ -1,23 +1,27 @@
 
-require 'smartmail_settings'
-
-sets = SMSetting.load
-mail = sets['smartmail']['user_name']
-pass = sets['smartmail']['user_password']
-@@srv = GoogleCalendar::Service.new(mail, pass)
-feed_root = "http://www.google.com/calendar/feeds"
-
-cals = sets['smartmail']['calendars']
-cal = cals.find {|it| it['name'] == "孫コウ" }
-read_write = "private/full"
-feed = "#{feed_root}/#{cal['ident']}/#{read_write}"
-# read_write = "private-42d02235f60d33aa9f07660c8a4f855e/basic"
-cal = GoogleCalendar::Calendar::new(@@srv, feed)
-event = cal.create_event
-event.title = 'test'
-event.desc = "test"
-event.where = ""
-event.st = Time.now
-event.en = Time.now
-event.save!
-
+test = "
+{仕事依頼先_start}
+> 比嘉邦彦
+ 孫コウ
+> 吉井あさ
+ 王リンキ
+> 大塚絵理
+> 河原奈生
+> 錦織聡一
+> 佐瀬毅
+> 小川洋史
+> 原田明典
+> 井川甲作
+> 樋口量
+> 浜口斉周
+> 中村人哉
+> 事務員1
+> 事務員2
+> 事務員3
+> 藤原一毅
+> 橋本雄也
+> secretaries
+> professor
+> mailing-test
+{仕事依頼先_end}
+"
