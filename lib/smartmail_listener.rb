@@ -73,19 +73,21 @@ module OpenWFE
               ldebug { "workitem: #{workitem.inspect}" }
               next unless workitem && !(workitem.is_a? String)
               print "#{@@underline}listener:send back workitem:#{@@normal} #{workitem}\n"
-              has_error = workitem["decode_success"]
-              unless has_error
+              decode_success = workitem["decode_success"]
+              if decode_success
+                handle_item(workitem)
+              else
                 _mailer = SMailer.new
                 _mailer.set_to(mail[:from])
                 process_name_now = workitem["__sm_jobname__"]
                 process_name_now = "ProcessError(#{workitem.fei.wfid})" unless process_name_now
                 process_name_now.gsub!(/__sm_sep__/,'')
-                subject_new = "#{process_name_now} ProcessError"
-                body[:plain] = 'Email decode error'
+                subject_new = "#{process_name_now} " + mail[:subject]
+                body = Hash.new
+                body[:plain] = "Email decode error\n\n#{mail[:body]}"
                 _mailer.set_subject(subject_new).set_body(body)
                 _mailer.send_email
               end
-              handle_item( workitem )
             end
           rescue Exception => e
             puts "#{@@underline}smartmail listener trigger error#{@@normal}"
@@ -110,7 +112,7 @@ module OpenWFE
         arwi_id = get_arwi_id_for_decode( email )
         puts "listener got arwi:#{arwi_id}"
         return unless arwi_id && arwi_id.to_s.size > 0
-        workitem = MailItem.get_workitem( arwi_id, 'delete', "listener" )
+        workitem = MailItem.get_workitem( arwi_id, 'not_delete', "listener" )
         puts "listener can not got workitem for arwi:#{arwi_id}" unless workitem
         return unless workitem
         puts "listener got wi:#{workitem.class}, #{workitem}"
@@ -131,6 +133,7 @@ module OpenWFE
           puts "decode_workitem error: #{e.message}"
         end
         print "#{@blue_underline}3.listener processed workitem:#{@normal} #{workitem}\n"
+        MailItem.get_workitem(arwi_id,'delete',"listener") if workitem["decode_success"]
         workitem
       end
 

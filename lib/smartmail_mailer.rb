@@ -277,7 +277,7 @@ class SMailer
     @imap_server.store( message_id, "+FLAGS", [:DELETED] )
     @imap_server.expunge()
     puts "delete email:#{message_id}"
-  end 
+  end
 
   def get_workflow_description( email )
     description = ''
@@ -301,8 +301,12 @@ class SMailer
       desc = workitem.fields['__sm_description__']
       pname = workitem.fields['__sm_jobname__']
       if pname
-        pname.gsub!(/__sm_sep__/,'')
-        desc = "#{desc} #{pname}"
+        pname.gsub!(/__sm_sep__/,',')
+        _pname = pname.split(/,/).uniq
+        _pname.delete("")
+        pname = _pname[0]
+        desc2 = "#{desc}/#{pname}"
+        # desc = "#{desc}&AC8-#{pname}"
       end
       step = SMSpreadsheet.get_stepname_from_spreadsheet( workitem.fei.wfname, _ps_type )
       # puts "get_workflow_folder: #{step}"
@@ -310,8 +314,10 @@ class SMailer
       _people = "#{workitem.fields['user_name']}"
     end
     _today = Time.now
-    _time_tag = "#{smartmail_tag}#{_today.year}-#{_today.month}-#{_today.day}"
-    folder_name = [desc, _time_tag, _people, step].compact
+    _time_tag = "#{smartmail_tag}"
+    _time_tag2 = "#{_time_tag}/#{_today.year}-#{_today.month}-#{_today.day}"
+    _time_tag3 = "#{_time_tag2}/#{desc}"
+    folder_name = [desc, desc2, _time_tag, _time_tag2, _time_tag3, "People", "People/#{_people}", "#{desc2}/#{step}"].compact
     folder_name.each {|tag| puts "use tag: #{tag}" }
     folder_name
   end

@@ -46,7 +46,7 @@ class SMOperation
 
   def self.build( email, workitem )
     return unless email
-    mail_to, body = email[:to], email[:body]
+    mail_to, body = email[:to], email[:body].gsub(/\//,"／")
     workitem.fields['__sm_build__'] = body
     next_step = get_step_information_from_email( email, workitem )
     workitem.fields['__sm_option__'] = next_step if next_step
@@ -272,7 +272,7 @@ class SMOperation
     info = delete_reply_qoutations( info ) || ''
     info = info.split(@@separator).join("\n")
     info = default_value unless info.size > 0
-    puts "sm_get: #{field} --> #{info} , #{default_value}"
+    # puts "sm_get: #{field} --> #{info} , #{default_value}"
     message += info.to_s
     end
     message = "sm_error: Can not get contents for #{operation}:#{operands}" if message == ''
