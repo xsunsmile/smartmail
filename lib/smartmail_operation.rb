@@ -17,6 +17,8 @@ class SMOperation
   @@underline = [0x1B].pack("c*") + "[1;4;35m"
   @@normal = [0x1B].pack("c*") + "[0m\n"
 
+  @@error_log = open("log/errors.log","a+")
+
   # set info between step_information and workitems
   def self.operate( workitem )
     return unless workitem
@@ -24,6 +26,7 @@ class SMOperation
     # puts "step_information: #{step_information}"
     return unless step_information
     underline = [0x1B].pack("c*") + "[1;4;32m"
+    decode_success = true
     information = Hash.new
     step_information.each {|it| information[it[:title]] = it[:contents]}
     get_operations( step_information ).each do |oper|
@@ -31,10 +34,13 @@ class SMOperation
       puts "#{underline}f:#{field} oper:#{operation} opera:#{operands}#{@@normal}"
       next unless field && operation && operands
       result = get_operation_results( operation, operands, workitem )
+      @@error_log.puts "error: #{operation},#{operands}\nerror: #{result}" if result =~ /sm_error/
+      decode_success = false if result =~ /sm_error/
       replace = "\{#{operation}:#{operands}\}"
       set_operation_contents( information, field, { replace => result })
     end
     # information.each_pair {|k,v| puts "step_information: #{underline}#{k} --> #{v}#{@@normal}" }
+    information["decode_success"] = decode_success
     information
   end
 
@@ -113,10 +119,10 @@ class SMOperation
   def self.reply_quotation_starts( message )
     _message = message.to_s.chomp
     docomo_reply_pattern = /^>$/
-      marker_pattern = />(:*)(\d+-\w+)(:*)|>(#+)\s(.*)\s(#+)/
-      cell_phone_pattern = /^On [\d\/]*, at/
-      gmail_pattern = /<(.*)@(.*)>:/
-      gmail_pattern2 = /--[0-9a-z]+--/
+    marker_pattern = />(:*)(\d+-\w+)(:*)|>(<+)\s(.*)\s(<+)/
+    cell_phone_pattern = /^On [\d\/]*, at/
+    gmail_pattern = /<(.*)@(.*)>:/
+    gmail_pattern2 = /--[0-9a-z]+--/
       /#{gmail_pattern}/ =~ _message or
       /#{gmail_pattern2}/ =~ _message or
       /#{marker_pattern}/ =~ _message or 
@@ -140,8 +146,9 @@ class SMOperation
     description.scan(/\{(sm_\w+):(.*)\}/).each do |oper|
       operation, operands = oper[0], oper[1]
       result = get_operation_results( operation, operands, workitem ) || "No result for #{operation}:#{operands}"
+      @@error_log.puts "error: #{operation},#{operands}\nerror: #{result}" if result =~ /sm_error/
       description.sub!(/\{#{operation}:#{operands}\}/,result)
-        # puts "#{@@underline}oper:#{operation} opera:#{operands} res:#{description}#{@@normal}"
+      # puts "#{@@underline}oper:#{operation} opera:#{operands} res:#{description}#{@@normal}"
     end
     description
   end
@@ -161,20 +168,20 @@ class SMOperation
     patterns = [ /(\d*)(y)/, /(\d*)(m)/, /(\d*)(d)/, /(\d*)(H)/, /(\d*)(M)/, /(\d*)(S)/ ]
     patterns.each do |pattern|
       diff, kinds = $1.to_i, $2 if /#{pattern}/ =~ format
-        case kinds
-        when 'y' 
-          return_time = return_time >> diff * 12
-        when 'M' 
-          return_time = return_time >> diff
-        when 'd' 
-          return_time += diff
-        when 'h' 
-          return_time += Rational(diff,24)
-        when 'm' 
-          return_time += Rational(diff,24*60)
-        when 's' 
-          return_time += Rational(diff,24*60*60)
-        end 
+      case kinds
+      when 'y' 
+        return_time = return_time >> diff * 12
+      when 'M' 
+        return_time = return_time >> diff
+      when 'd' 
+        return_time += diff
+      when 'h' 
+        return_time += Rational(diff,24)
+      when 'm' 
+        return_time += Rational(diff,24*60)
+      when 's' 
+        return_time += Rational(diff,24*60*60)
+      end 
     end 
     # puts "#{format}, #{return_time.strftime("%Y-%m-%d %H:%M:%S")}"
     return_time
@@ -260,14 +267,15 @@ class SMOperation
   def self.sm_get( operation, operands, workitem )
     message = ''
     operands.split(/,/).each do | field |
-      field, default_value = $1, $2 if field =~ /(.*)\.(.*)/
-      info = workitem.fields[ field ].to_s || ''
-      info = delete_reply_qoutations( info ) || ''
-      info = info.split(@@separator).join("\n")
-      info = default_value unless info.size > 0
-      puts "sm_get: #{field} --> #{info} , #{default_value}"
-      message += info.to_s
+    field, default_value = $1, $2 if field =~ /(.*)\.(.*)/
+    info = workitem.fields[ field ].to_s || ''
+    info = delete_reply_qoutations( info ) || ''
+    info = info.split(@@separator).join("\n")
+    info = default_value unless info.size > 0
+    puts "sm_get: #{field} --> #{info} , #{default_value}"
+    message += info.to_s
     end
+    message = "sm_error: Can not get contents for #{operation}:#{operands}" if message == ''
     message
   end
 

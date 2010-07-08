@@ -299,6 +299,11 @@ class SMailer
     workitem = MailItem.get_workitem( _store_id ) if _store_id
     if workitem
       desc = workitem.fields['__sm_description__']
+      pname = workitem.fields['__sm_jobname__']
+      if pname
+        pname.gsub!(/__sm_sep__/,'')
+        desc = "#{desc} #{pname}"
+      end
       step = SMSpreadsheet.get_stepname_from_spreadsheet( workitem.fei.wfname, _ps_type )
       # puts "get_workflow_folder: #{step}"
       _ps_type = "#{step}_#{_ps_type}"

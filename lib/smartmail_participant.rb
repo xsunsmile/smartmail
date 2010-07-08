@@ -121,12 +121,12 @@ module OpenWFE
         end
         s_reminder = workitem.fields['__sm_reminder__'] || nil
         s_timeout = workitem.fields['__sm_timeout__'] || nil
-        event = Hash.new
-        event[:title] = "#{desc} #{contents[:title]} #{@user_name}"
-        event[:desc] = "#{contents[:body][:plain]}"
-        event[:end] = Time.now + Rufus::parse_time_string(s_timeout) if s_timeout
-        user_calendar = (@user_name == 'フロー管理者')? 'default' : @user_name
-        error = SMGoogleCalendar.create_event( event, user_calendar )
+        # event = Hash.new
+        # event[:title] = "#{desc} #{contents[:title]} #{@user_name}"
+        # event[:desc] = "#{contents[:body][:plain]}"
+        # event[:end] = Time.now + Rufus::parse_time_string(s_timeout) if s_timeout
+        # user_calendar = (@user_name == 'フロー管理者')? 'default' : @user_name
+        # error = SMGoogleCalendar.create_event( event, user_calendar )
         # puts "\ngcal error: #{error.inspect}" if error
         # block no reply steps to send reminder emails
         wait_reply = workitem.params['wait_for_reply']
@@ -144,7 +144,10 @@ module OpenWFE
                 raise "#{@user_name} escape from reminder loop."
               end
               unless first_time
-                mailer.set_subject("#{@reminder_header}" + contents[:title])
+                process_name_now = workitem["__sm_jobname__"]
+                process_name_now = "Process(#{workitem.fei.wfid})" unless process_name_now
+                process_name_now.gsub!(/__sm_sep__/,'')
+                mailer.set_subject("#{@reminder_header} #{process_name_now}")
                 # mailer.set_body(contents[:body], format)
               end
               puts "#{@user_name} reminder: #{s_reminder}, #{s_timeout}, id:#{fei_id}?[#{is_next_step}]"

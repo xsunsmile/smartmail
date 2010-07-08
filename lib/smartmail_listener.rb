@@ -67,12 +67,24 @@ module OpenWFE
           ldebug { "trigger()" }
           begin
             mailer = SMailer.new
-            mailer.scan_imap_folder.each do |mail| 
+            mailer.scan_imap_folder.each do |mail|
               puts "#{@@underline}listener dealing with email: #{mail[:from]}#{@@normal}"
               workitem = decode_workitem( mail )
               ldebug { "workitem: #{workitem.inspect}" }
               next unless workitem && !(workitem.is_a? String)
               print "#{@@underline}listener:send back workitem:#{@@normal} #{workitem}\n"
+              has_error = workitem["decode_success"]
+              unless has_error
+                _mailer = SMailer.new
+                _mailer.set_to(mail[:from])
+                process_name_now = workitem["__sm_jobname__"]
+                process_name_now = "ProcessError(#{workitem.fei.wfid})" unless process_name_now
+                process_name_now.gsub!(/__sm_sep__/,'')
+                subject_new = "#{process_name_now} ProcessError"
+                body[:plain] = 'Email decode error'
+                _mailer.set_subject(subject_new).set_body(body)
+                _mailer.send_email
+              end
               handle_item( workitem )
             end
           rescue Exception => e
@@ -105,15 +117,16 @@ module OpenWFE
         workitem["attachment"] = email[:attachment]
         workitem["email_from"] = email[:from].join(',')
         begin
-          SMOperation.build( email, workitem )
+          decode_infos = SMOperation.build( email, workitem )
+          workitem["decode_success"] = decode_infos["decode_success"]
           email[:subject] = Kconv.toutf8(email[:subject])
           # _ps_type = $1 if /\+([a-z]+)?_?([\d]+)@/ =~ email[:to]
           # step = SMSpreadsheet.get_stepname_from_spreadsheet( workitem.fei.wfname, _ps_type )
-          event = Hash.new
-          event[:title] = "#{email[:subject]}"
-          event[:desc] = "#{email[:body]}"
-          calendar_name = workitem.fields['user_name'] || 'default'
-          SMGoogleCalendar.create_event( event, calendar_name )
+          # event = Hash.new
+          # event[:title] = "#{email[:subject]}"
+          # event[:desc] = "#{email[:body]}"
+          # calendar_name = workitem.fields['user_name'] || 'default'
+          # SMGoogleCalendar.create_event( event, calendar_name )
         rescue Exception => e
           puts "decode_workitem error: #{e.message}"
         end

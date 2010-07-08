@@ -1,3 +1,7 @@
+vendor/plugins/ruote_plugin
+nohup.out
+shutdown.sh
+run.sh
 debug*
 log/*.log
 log/*.pid
