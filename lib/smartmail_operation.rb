@@ -279,6 +279,12 @@ class SMOperation
     message
   end
 
+  def self.sm_forward( operation, operands, workitem )
+    message = workitem.fields['__sm_build__']
+    message = "sm_error: Can not get contents for #{operation}:#{operands}" unless message
+    message
+  end
+
   def self.sm_aggregate( operation, operands, workitem )
     # print "sm_aggregate in: #{workitem}\n"
     workitem.attributes.each do |_attr|
@@ -397,6 +403,32 @@ class SMOperation
     selected_items = selection.collect {|item| item.gsub!(/\s/,''); item + "," if item.size > 0 }.compact
     # puts selected_items
     workitem.fields[ operands ] = selected_items
+    workitem.fields['__sm_build__'] = ''
+    return
+  end
+
+  def self.sm_select_case( operation, operands, workitem )
+    underline = [0x1B].pack("c*") + "[1;4;31m"
+    operands.split(/;/).each do |operand|
+      data = workitem.fields['__sm_build__'] || ''
+      next unless data.size > 0
+      case_str, set_field = operand.split(/,/)
+      puts "sm_select_case #{case_str}, #{set_field}"
+      pattern = /\{#{case_str}_start\}(.*)\{#{case_str}_end\}/
+      _data = data.gsub(/\r\n|\r|\n|<br>/,'[NEWLINE]').gsub(/>/,'')
+      # puts "#{underline}sm_select#{@@normal} from data: #{_data}"
+      __selection = _data.scan( pattern ).join('')
+      selection = __selection.split(/\[NEWLINE\]/).collect {|pp| pp if !(/#{@@list_prefix}/ =~ pp) }.compact!
+      selection.each {|it| it.gsub!(/\[NEWLINE\]/,"\n")} if selection
+      unless selection
+        workitem.fields[ set_field ] = __selection.gsub(/\[NEWLINE\]/,"\n")
+        puts "sm_select_case #{case_str}, #{__selection}"
+        next
+      end
+      selected_items = selection.collect {|item| item.gsub!(/\s/,''); item + "," if item.size > 0 }.compact
+      puts "sm_select_case #{case_str}, #{selected_items.inspect}"
+      workitem.fields[ set_field ] = selected_items
+    end
     workitem.fields['__sm_build__'] = ''
     return
   end

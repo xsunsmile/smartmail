@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20100426065232) do
+ActiveRecord::Schema.define(:version => 20100710045209) do
 
   create_table "ar_workitems", :force => true do |t|
     t.string   "fei"
@@ -83,6 +83,13 @@ ActiveRecord::Schema.define(:version => 20100426065232) do
   create_table "mail_items", :force => true do |t|
     t.string   "name"
     t.string   "item"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "mail_process_relations", :force => true do |t|
+    t.string   "mail_body"
+    t.string   "fei"
     t.datetime "created_at"
     t.datetime "updated_at"
   end

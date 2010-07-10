@@ -1,5 +1,5 @@
 
-require 'google_spreadsheet'
+require 'lib/google_spreadsheet'
 
 class SMSpreadsheet
 
@@ -35,16 +35,21 @@ class SMSpreadsheet
     sheet_name, description_title, flow_name_title = 
     "smartmail_flows", Kconv.toutf8('フロー説明'), Kconv.toutf8('ワークフロー名')
     fields = get_fields_from_spreadsheet( sheet_name )
-    title_f = fields.find {|data| data[:title] == flow_name_title && data[:contents] == flow_name}
-    desc_field = fields.find {|data| data[:row] == title_f[:row] && data[:column] == title_f[:column]+1 }
-    result = desc_field[:contents]
-    return result
+    # fields.each {|__f| puts "\nspreadsheet #{flow_name} --> #{__f.inspect}"}
+    begin
+      title_f = fields.find {|data| data[:title] == flow_name_title && data[:contents] == flow_name}
+      desc_field = fields.find {|data| data[:row] == title_f[:row] && data[:column] == title_f[:column]+1 }
+      result = desc_field[:contents]
+      return result
+    rescue
+      return "No Description"
+    end
   end
 
   def self.get_stepname_from_spreadsheet( flow_name, step_name_short )
     # TODO: remove dependency with constent varaiables
     sheet_name, short_title, stepname = 
-    flow_name+"_steps", Kconv.toutf8('ステップ略称'), Kconv.toutf8('ステップ説明')
+      flow_name+"_steps", Kconv.toutf8('ステップ略称'), Kconv.toutf8('ステップ説明')
     fields = get_fields_from_spreadsheet( sheet_name )
     title_f = fields.find {|data| data[:title] == short_title && data[:contents] == "\{sm_step_short:#{step_name_short}\}"}
     # puts "get_stepname_from_spreadsheet: flow:#{flow_name} title:#{title_f}"

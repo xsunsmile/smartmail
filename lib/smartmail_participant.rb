@@ -61,6 +61,7 @@ module OpenWFE
           if user && user.email
             @wi_send_to[ workitem.fei.wfid ] = user.email if @send_to == '_owner'
             workitem.fields['applicant'] = user.name
+            workitem.fields['email_from'] = user.email
           else
             puts "Can not get owner's email address: #{user.inspect}"
           end
@@ -105,6 +106,24 @@ module OpenWFE
         desc = workitem.fields['__sm_description__']
         mailer = SMailer.new
         mailer.set_reply_with_wfid( fei_store.id )
+        # TODO: remove it outside
+        settings = SMSetting.load()
+        params = settings["smartmail"]
+        smartmail_address = params["from_address"]
+        if send_to == smartmail_address
+          from_ad = workitem.fields['email_from'] || ''
+          mailer.set_from( from_ad ) if from_ad.size > 0
+          send_to.gsub!(/@/,"+#{fei_store.id}@")
+          puts "set smartmail: #{send_to}"
+          process_store = MailProcessRelation.find_by_fei(workitem.fei.wfid)
+          mail_body = Kconv.toutf8(process_store.mail_body)
+          # puts "find emailcon: #{workitem.fei.wfid} --> #{mail_body}"
+          if process_store
+            contents[:body][:plain] = mail_body
+            format = false
+            process_store.destroy
+          end
+        end
         mailer.set_to(send_to)
         puts "detected attach: #{workitem["attachment"]}" if workitem["attachment"]
         process_name_now = workitem["__sm_jobname__"]

@@ -91,10 +91,18 @@ class SMailer
   end
 
   def set_to(to_address)
-    p "set_emailto: #{to_address}"
+    puts "set_emailto: #{to_address}"
     return unless to_address
     @mail.to = to_address.split(/,/)
     @to_address = to_address.split(/,/)
+    self
+  end
+
+  def set_from(from_address)
+    puts "set_emailfrom: #{from_address}"
+    return unless from_address
+    @mail.from = from_address
+    # @to_address = to_address.split(/,/)
     self
   end
 
@@ -197,7 +205,7 @@ class SMailer
   def analysis( email_content, to_utf8=false )
     details = Hash.new
     email = TMail::Mail.parse(email_content)
-    subject = (to_utf8)? NKF.nkf("-w", email.subject) : email.subject
+    subject = NKF.nkf("-w", email.subject)
     body = (to_utf8)? NKF.nkf("-w", email.body_plain) : email.body_plain
     body.gsub!(/\//,"／")
     attachments = Array.new
@@ -208,10 +216,12 @@ class SMailer
         attachments << filename
       end
     end
-    details[:subject], details[:body] = subject, body
+    details[:subject], details[:body], details[:from] = subject, body, email.from
     # details[:from], details[:attachment] = email.from, attachments
-    details[:to], details[:from] = email['Delivered-To'].to_s, email.from
-    puts "analysis --> attachments: #{attachments.inspect}"
+    details[:to] = email['Delivered-To'].to_s
+    details[:to] = email['to'].to_s unless details[:to]
+    puts "can not get mailto. from #{email.from}" unless details[:to]
+    # puts "analysis --> attachments: #{attachments.inspect}"
     details[:attachment] = attachments if attachments.size > 0
     details.each_pair{|k,v| puts "analysis email: #{k} => #{v}"}
     details
@@ -270,9 +280,9 @@ class SMailer
       next unless tag_name && tag_name.size > 0
       folder_name = Net::IMAP::encode_utf7( tag_name )
       puts "add #{tag_name} to email:#{message_id}"
-      @imap_server.examine( folder_name ) rescue @imap_server.create( folder_name )
-      @imap_server.select( from_folder )
-      @imap_server.copy( message_id, folder_name )
+      @imap_server.examine( folder_name ) rescue (@imap_server.create( folder_name ) rescue "")
+      @imap_server.select( from_folder ) rescue ""
+      @imap_server.copy( message_id, folder_name ) rescue ""
     end
     @imap_server.store( message_id, "+FLAGS", [:DELETED] )
     @imap_server.expunge()

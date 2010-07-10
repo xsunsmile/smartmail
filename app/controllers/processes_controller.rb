@@ -153,13 +153,9 @@ class ProcessesController < ApplicationController
     headers['Location'] = process_url(fei.wfid)
 
     respond_to do |format|
-
-      format.html {
-        redirect_to :action => 'show', :id => fei.wfid }
-        format.json {
-          render :json => "{\"wfid\":#{fei.wfid}}", :status => 201 }
-          format.xml {
-            render :xml => "<wfid>#{fei.wfid}</wfid>", :status => 201 }
+      format.html { redirect_to :action => 'show', :id => fei.wfid }
+      format.json { render :json => "{\"wfid\":#{fei.wfid}}", :status => 201 }
+      format.xml { render :xml => "<wfid>#{fei.wfid}</wfid>", :status => 201 }
     end
   end
 
@@ -199,8 +195,7 @@ class ProcessesController < ApplicationController
 
             rescue Exception => e
 
-              raise ErrorReply.new(
-        'failed to parse launchitem from request body', 400)
+              raise ErrorReply.new('failed to parse launchitem from request body', 400)
             end
 
           #
@@ -212,8 +207,7 @@ class ProcessesController < ApplicationController
 
             definition = Definition.find(definition_id)
 
-            raise ErrorReply.new(
-        'you are not allowed to launch this process', 403
+            raise ErrorReply.new( 'you are not allowed to launch this process', 403
                                 ) unless current_user.may_launch?(definition)
 
                                 params[:definition_url] = definition.local_uri if definition

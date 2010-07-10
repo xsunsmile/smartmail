@@ -77,16 +77,7 @@ module OpenWFE
               if decode_success
                 handle_item(workitem)
               else
-                _mailer = SMailer.new
-                _mailer.set_to(mail[:from])
-                process_name_now = workitem["__sm_jobname__"]
-                process_name_now = "ProcessError(#{workitem.fei.wfid})" unless process_name_now
-                process_name_now.gsub!(/__sm_sep__/,'')
-                subject_new = "#{process_name_now} " + mail[:subject]
-                body = Hash.new
-                body[:plain] = "Email decode error\n\n#{mail[:body]}"
-                _mailer.set_subject(subject_new).set_body(body)
-                _mailer.send_email
+                send_error_email( mail, workitem )
               end
             end
           rescue Exception => e
@@ -99,9 +90,26 @@ module OpenWFE
 
       protected
 
+      def send_error_email( mail, workitem )
+        _mailer = SMailer.new
+        _mailer.set_to(mail[:from])
+        process_name_now = workitem["__sm_jobname__"]
+        process_name_now = "ProcessError(#{workitem.fei.wfid})" unless process_name_now
+        process_name_now.gsub!(/__sm_sep__/,'')
+        subject_new = "#{process_name_now} " + mail[:subject]
+        body = Hash.new
+        body[:plain] = "Email decode error\n\n#{mail[:body]}"
+        _mailer.set_subject(subject_new).set_body(body)
+        _mailer.send_email
+      end
+
       def get_arwi_id_for_decode( email )
         mail_to = email[:to]
         arwi_id = rescue_arwi_id_from_mailto( mail_to ) unless arwi_id.is_a? String
+        unless arwi_id
+          title = Kconv.toutf8( email[:subject] )
+          arwi_id = $1 if title =~ /\((\d+)\)/
+        end
         return arwi_id if arwi_id.is_a? String
       end
 
@@ -112,7 +120,9 @@ module OpenWFE
         arwi_id = get_arwi_id_for_decode( email )
         puts "listener got arwi:#{arwi_id}"
         return unless arwi_id && arwi_id.to_s.size > 0
-        workitem = MailItem.get_workitem( arwi_id, 'not_delete', "listener" )
+        workitem = (arwi_id.to_i == 0)? 
+          create_new_process(email) : 
+          MailItem.get_workitem(arwi_id, 'not_delete', "listener")
         puts "listener can not got workitem for arwi:#{arwi_id}" unless workitem
         return unless workitem
         puts "listener got wi:#{workitem.class}, #{workitem}"
@@ -131,10 +141,49 @@ module OpenWFE
           # SMGoogleCalendar.create_event( event, calendar_name )
         rescue Exception => e
           puts "decode_workitem error: #{e.message}"
+          puts e.backtrace #.join("\n")
         end
         print "#{@blue_underline}3.listener processed workitem:#{@normal} #{workitem}\n"
         MailItem.get_workitem(arwi_id,'delete',"listener") if workitem["decode_success"]
         workitem
+      end
+
+      def create_new_process(email)
+        params = Hash.new
+        email_address = email[:from]
+        # title = "業務依頼(Job Request)[スマートメールテスト]"
+        title = email[:subject]
+        process_type, process_name = $1,$2 if title =~ /\((.*)\)\[(.*)\]/
+        _def = Definition.find_by_name( process_type )
+        fields = (eval(_def.launch_fields.gsub(/:/,"=>")) rescue Hash.new)
+        fields["__sm_jobname__"] = process_name
+        params["attributes"] = fields
+        params["workflow_definition_url"] = "/var/www/smartmail-dev/public/defs/#{_def.uri}"
+        # params["last_modified"] = Date.new
+        li = OpenWFE::LaunchItem.from_h(params)
+        # puts li.inspect
+        # RuotePlugin.ruote_engine
+        _user = User.find_by_email( email_address )
+        if _user
+          options = { :variables => { 'launcher' => _user.login } }
+          fei = RuotePlugin.ruote_engine.launch(li, options)
+          # MailProcessRelation(id: integer, mail_body: string, fei: string
+          process_store = MailProcessRelation.new
+          mail_body = Kconv.toutf8(email[:body])
+          process_store.mail_body = mail_body
+          process_store.fei = fei.wfid
+          process_store.save!
+          puts "store emailcon: #{fei.wfid} --> #{mail_body}"
+          unless UserProcessRelation.find_by_wfid( fei.wfid )
+            relation = UserProcessRelation.new
+            relation.user_id = _user.id
+            relation.wfid = fei.wfid
+            relation.save!
+          end
+          puts fei.inspect
+        else
+          send_error_email( email, fields )
+        end
       end
 
       def analysis_error_response( email )
